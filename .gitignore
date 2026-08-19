@@ -1,0 +1,43 @@
+# Python bytecode, caches and virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ML data and generated artifacts
+data/
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.safetensors
+artifacts/*
+!artifacts/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs / reports
+*.log
+coverage/
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/

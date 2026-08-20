@@ -1,0 +1,24 @@
+schema_version: "1.0"
+dataset_id: example-image-dataset
+modality: image
+task: ai_generated_image_detection
+provenance:
+  source: https://example.org/dataset
+  license: "REPLACE_WITH_OFFICIAL_LICENSE"
+  access: public
+  citation: "REPLACE_WITH_DATASET_CITATION"
+labels:
+  - real
+  - ai_generated
+splits:
+  train: manifests/example_train.csv
+  validation: manifests/example_validation.csv
+  test: manifests/example_test.csv
+preprocessing:
+  version: "0.1"
+  resize: 224
+  normalization: imagenet
+reproducibility:
+  seed: 42
+  source_grouping: required
+notes: Replace this example with a reviewed dataset before training.

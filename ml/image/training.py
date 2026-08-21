@@ -13,6 +13,7 @@ from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+from ml.image.config import ImageModelConfig
 from ml.image.model import build_model
 
 
@@ -67,12 +68,13 @@ def main() -> None:
     val_ds = datasets.ImageFolder(args.data / "val", transform=build_transform(False))
     if train_ds.class_to_idx != val_ds.class_to_idx:
         raise ValueError("Train and validation class mappings differ")
-    if train_ds.classes != ["ai_generated", "real"] and set(train_ds.classes) != {"ai_generated", "real"}:
-        raise ValueError("Expected exactly the classes: ai_generated and real")
+    expected = {"ai_generated", "real"}
+    if set(train_ds.classes) != expected:
+        raise ValueError(f"Expected exactly the classes {sorted(expected)}")
 
     train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=2)
-    model = build_model(num_classes=len(train_ds.classes)).to(device)
+    model = build_model(ImageModelConfig(num_classes=len(train_ds.classes))).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
 

@@ -1,0 +1,51 @@
+schema_version: "1.0"
+project: DEEP-Guard
+
+datasets:
+  - id: faceforensics-plus-plus
+    name: FaceForensics++
+    modality: video
+    task: manipulated_media_detection
+    status: planned
+    source: https://github.com/ondyari/FaceForensics
+    access: restricted_or_request_based
+    license_note: Review official dataset terms before download or redistribution.
+    labels:
+      - real
+      - manipulated
+
+  - id: df40
+    name: DF40
+    modality: video
+    task: deepfake_detection
+    status: planned
+    source: https://github.com/YZY-stack/DF40
+    access: review_official_source
+    license_note: Review official dataset terms before use.
+    labels:
+      - real
+      - manipulated
+
+  - id: synthetic-image-placeholder
+    name: Initial synthetic-image benchmark
+    modality: image
+    task: ai_generated_image_detection
+    status: planned
+    source: TBD
+    access: TBD
+    license_note: Dataset will be added only after provenance and license review.
+    labels:
+      - real
+      - ai_generated
+
+  - id: synthetic-audio-placeholder
+    name: Initial synthetic-audio benchmark
+    modality: audio
+    task: synthetic_speech_detection
+    status: planned
+    source: TBD
+    access: TBD
+    license_note: Dataset will be added only after provenance and license review.
+    labels:
+      - real
+      - ai_generated

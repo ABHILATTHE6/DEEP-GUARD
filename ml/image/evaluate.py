@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+from ml.image.config import ImageModelConfig
 from ml.image.model import build_model
 
 
@@ -31,7 +32,7 @@ def main() -> None:
     if dataset.classes != classes:
         raise ValueError(f"Dataset classes {dataset.classes} do not match checkpoint classes {classes}")
 
-    model = build_model(num_classes=len(classes))
+    model = build_model(ImageModelConfig(num_classes=len(classes))).cpu()
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()
     loader = DataLoader(dataset, batch_size=32, shuffle=False)

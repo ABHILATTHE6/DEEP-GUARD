@@ -1,14 +1,40 @@
-# Dataset Registry
+# DEEP-Guard Image Datasets
 
-This directory stores dataset metadata and manifests. Raw datasets are intentionally excluded from Git.
+This directory contains dataset metadata and preparation documentation only. Raw datasets are intentionally excluded from Git.
 
-## Planned datasets
+## M2.2 strategy
 
-| Dataset | Modality | Purpose | Status |
-|---|---|---|---|
-| FaceForensics++ | Video | Manipulated/deepfake video detection | Planned |
-| DF40 | Video | Diverse deepfake technique evaluation | Planned |
-| Synthetic speech datasets | Audio | AI-generated/voice-cloned speech detection | Planned |
-| AI-generated image datasets | Image | Synthetic image detection | Planned |
+Separate **training data** from **generalization data**. Do not mix the same source/generator across train and test splits.
 
-Before adding a dataset, record its official source, license/access conditions, preprocessing procedure, split strategy, and known limitations.
+### Primary candidate
+
+**CIFAKE** is a practical image-level baseline for real-vs-AI-generated image classification. Before training, record its exact source/version, license or terms, class balance, preprocessing, and split.
+
+### Generalization
+
+For a stronger experiment, add an independent test set containing images from generators not represented in training. Report this separately from the in-distribution test score.
+
+### Future video data
+
+FaceForensics++ is reserved primarily for the later video/deepfake phase. Its official project describes 1,000 original video sequences manipulated using four methods and provides access under its terms.
+
+## Local layout
+
+```text
+datasets/local/image/
+├── train/
+│   ├── real/
+│   └── ai_generated/
+├── val/
+│   ├── real/
+│   └── ai_generated/
+└── test/
+    ├── real/
+    └── ai_generated/
+```
+
+## Reproducibility requirements
+
+Before training, record dataset name/version, source/access date, license/terms, image counts per class, formats/dimensions, split strategy and seed, preprocessing/augmentation configuration, and checksums/manifests where practical.
+
+Never commit downloaded dataset files or credentials.

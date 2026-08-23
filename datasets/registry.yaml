@@ -2,6 +2,19 @@ schema_version: "1.0"
 project: DEEP-Guard
 
 datasets:
+  - id: cifake
+    name: CIFAKE
+    modality: image
+    task: ai_generated_image_detection
+    status: candidate
+    source: https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
+    access: public_platform
+    license_note: Review the dataset's current Kaggle terms and source attribution before use.
+    labels:
+      - real
+      - ai_generated
+    notes: Use as an initial image-level benchmark; record the exact downloaded version and split metadata before training.
+
   - id: faceforensics-plus-plus
     name: FaceForensics++
     modality: video
@@ -25,18 +38,6 @@ datasets:
     labels:
       - real
       - manipulated
-
-  - id: synthetic-image-placeholder
-    name: Initial synthetic-image benchmark
-    modality: image
-    task: ai_generated_image_detection
-    status: planned
-    source: TBD
-    access: TBD
-    license_note: Dataset will be added only after provenance and license review.
-    labels:
-      - real
-      - ai_generated
 
   - id: synthetic-audio-placeholder
     name: Initial synthetic-audio benchmark

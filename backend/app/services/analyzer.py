@@ -5,7 +5,7 @@ import mimetypes
 import os
 from pathlib import Path
 
-from ml.image.inference.predict import predict_image
+from ml.image.inference import predict
 
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime", "video/x-matroska"}
@@ -23,11 +23,15 @@ def _image(path: str) -> dict:
             "model": "deepguard-image-v1",
             "evidence": ["No trained checkpoint configured for API inference."],
         }
-    result = predict_image(path, checkpoint)
+
+    result = predict(path, checkpoint)
+    label = str(result["label"])
+    confidence = float(result["confidence"])
+    verdict = "likely_ai_generated" if label == "ai_generated" else "likely_real"
     return {
         "modality": "image",
-        "verdict": result["verdict"],
-        "confidence": result["confidence"],
+        "verdict": verdict,
+        "confidence": confidence,
         "status": "ready",
         "model": "deepguard-image-v1",
         "evidence": ["EfficientNet-B0 model prediction"],

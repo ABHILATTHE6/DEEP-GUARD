@@ -22,19 +22,52 @@ def _image(path: str) -> dict:
             "status": "model_not_configured",
             "model": "deepguard-image-v1",
             "evidence": ["No trained checkpoint configured for API inference."],
+            "summary": "DEEP-Guard could not assess this image because the trained image checkpoint is not configured.",
         }
 
     result = predict(path, checkpoint)
     label = str(result["label"])
     confidence = float(result["confidence"])
+    ai_probability = float(result.get("ai_probability", confidence if label == "ai_generated" else 1.0 - confidence))
+    real_probability = 1.0 - ai_probability
     verdict = "likely_ai_generated" if label == "ai_generated" else "likely_real"
+
+    if verdict == "likely_ai_generated":
+        summary = (
+            f"The image is classified as likely AI-generated with {confidence * 100:.1f}% model confidence. "
+            f"The model assigns approximately {ai_probability * 100:.1f}% probability to the AI-generated class "
+            f"and {real_probability * 100:.1f}% to the real class."
+        )
+    else:
+        summary = (
+            f"The image is classified as likely real with {confidence * 100:.1f}% model confidence. "
+            f"The model assigns approximately {real_probability * 100:.1f}% probability to the real class "
+            f"and {ai_probability * 100:.1f}% to the AI-generated class."
+        )
+
+    evidence = [
+        "EfficientNet-B0 transfer-learning model prediction.",
+        f"AI-generated class score: {ai_probability * 100:.1f}%.",
+        f"Real class score: {real_probability * 100:.1f}%.",
+        "The score represents model confidence, not definitive proof of image origin.",
+    ]
+
     return {
         "modality": "image",
         "verdict": verdict,
         "confidence": confidence,
         "status": "ready",
         "model": "deepguard-image-v1",
-        "evidence": ["EfficientNet-B0 model prediction"],
+        "evidence": evidence,
+        "summary": summary,
+        "scores": {
+            "ai_generated": ai_probability,
+            "real": real_probability,
+        },
+        "explainability": {
+            "available": False,
+            "message": "Pixel-level heatmaps are not enabled in the current baseline model.",
+        },
     }
 
 
@@ -46,6 +79,7 @@ def _untrained(modality: str, model: str) -> dict:
         "status": "experimental_model_not_trained",
         "model": model,
         "evidence": [f"{modality.title()} model is not yet trained; no synthetic result is claimed."],
+        "summary": f"The {modality} pipeline is present, but its model has not yet been trained, so DEEP-Guard is not making a detection claim.",
     }
 
 

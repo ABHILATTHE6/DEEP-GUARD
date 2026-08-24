@@ -11,9 +11,6 @@ from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 
 CLASSES = ["ai_generated", "real"]
 DROPOUT = 0.2
-# Do not expose raw softmax as if it were a calibrated probability.
-# This threshold intentionally creates an uncertainty band to reduce
-# overconfident false positives on images outside the training distribution.
 AI_THRESHOLD = 0.75
 REAL_THRESHOLD = 0.35
 
@@ -29,11 +26,6 @@ def _build_model(num_classes: int) -> torch.nn.Module:
 
 
 def _verdict(ai_score: float) -> tuple[str, str]:
-    """Map the raw AI score to a conservative user-facing verdict.
-
-    The model score is not a probability of provenance. An uncertainty band
-    is preferable to forcing borderline predictions into a binary decision.
-    """
     if ai_score >= AI_THRESHOLD:
         return "likely_ai_generated", "strong_ai_signal"
     if ai_score <= REAL_THRESHOLD:
@@ -43,7 +35,6 @@ def _verdict(ai_score: float) -> tuple[str, str]:
 
 def predict(path: Path, checkpoint_path: Path) -> dict:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     checkpoint = torch.load(checkpoint_path, map_location=device)
     state = checkpoint["model_state_dict"]
     classes = checkpoint.get("classes", CLASSES)

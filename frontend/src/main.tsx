@@ -88,6 +88,24 @@ function App() {
 
   const confidence = result?.confidence == null ? null : Math.round(result.confidence * 1000) / 10;
   const verdictClass = result?.verdict === 'likely_real' ? 'real' : result?.verdict === 'ai_generated' ? 'ai' : 'neutral';
+  const isReal = result?.verdict === 'likely_real';
+
+  const explanation = result && !result.error ? {
+    title: isReal ? 'The image is more consistent with the real class.' : 'The image is more consistent with the AI-generated class.',
+    summary: isReal
+      ? `DEEP-Guard's EfficientNet-B0 classifier assigned the image to the “likely real” class with a ${confidence}% model confidence score. This means the learned visual patterns in this image were closer to the examples the model learned as real than to its AI-generated examples.`
+      : `DEEP-Guard's EfficientNet-B0 classifier assigned the image to the “AI generated” class with a ${confidence}% model confidence score. This means the learned visual patterns in this image were closer to the examples the model learned as AI-generated than to its real-image examples.`,
+    confidence: confidence == null
+      ? 'No confidence score was returned by the API.'
+      : `The ${confidence}% value is the model's score for its selected class. It should not be read as a ${confidence}% guarantee that the image is genuinely real or genuinely AI-generated.`,
+    evidence: result.evidence?.length
+      ? result.evidence
+      : ['The API did not return additional evidence for this analysis.'],
+    limitation: 'The current baseline exposes a model-level prediction only. It does not yet provide pixel-level heatmaps, manipulated-region detection, metadata analysis, or a human-readable explanation of which exact visual features caused the decision.',
+    next: isReal
+      ? 'For higher-stakes verification, compare the result with the image source, metadata, provenance, and other independent evidence.'
+      : 'For higher-stakes verification, look for the original source, provenance, metadata, and an independent detector before treating the result as conclusive.'
+  } : null;
 
   return (
     <div className="app-shell">
@@ -99,7 +117,7 @@ function App() {
 
       <main className="content">
         <header className="topbar">
-          <div><span className="eyebrow">AI FORENSICS CONSOLE</span><h1>Detection workspace</h1><p>Inspect an image and review the model's evidence-backed assessment.</p></div>
+          <div><span className="eyebrow">AI FORENSICS CONSOLE</span><h1>Detection workspace</h1><p>Inspect an image and review a clear, explainable model assessment.</p></div>
           <div className={`api-pill ${apiOnline ? 'online' : ''}`}><span /> {apiOnline ? 'API connected' : 'API offline'}<small>{API.replace('http://', '')}</small></div>
         </header>
 
@@ -117,13 +135,24 @@ function App() {
           <div className={`card result-card ${result && !result.error ? verdictClass : ''}`}>
             <div className="section-head"><div><span className="label">ASSESSMENT</span><h2>Forensic result</h2><p>Values below come directly from the DEEP-Guard API.</p></div><span className="step">02</span></div>
             {!result ? <div className="result-empty"><div className="scan-icon">◈</div><strong>Ready for inspection</strong><span>Upload an image to generate a model assessment.</span></div> : result.error ? <div className="error-box">{result.error}</div> : <div className="result-body">
-              <div className="verdict-row"><div><span className="result-label">VERDICT</span><div className="verdict">{label}</div></div><div className="confidence"><strong>{confidence}%</strong><span>confidence</span></div></div>
+              <div className="verdict-row"><div><span className="result-label">VERDICT</span><div className="verdict">{label}</div></div><div className="confidence"><strong>{confidence}%</strong><span>model score</span></div></div>
               <div className="meter"><span style={{ width: `${confidence ?? 0}%` }} /></div>
               <div className="details"><div><span>Status</span><strong>{result.status || '—'}</strong></div><div><span>Model</span><strong>{result.model || '—'}</strong></div><div><span>Modality</span><strong>{result.modality || '—'}</strong></div></div>
-              <div className="evidence"><span className="result-label">EVIDENCE</span><ul>{(result.evidence || []).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
+              <div className="evidence"><span className="result-label">EVIDENCE RETURNED BY API</span><ul>{(result.evidence || []).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
             </div>}
           </div>
         </section>
+
+        {explanation && <section className="card explanation-card">
+          <div className="section-head explanation-head"><div><span className="label">EXPLAINED SUMMARY</span><h2>What this result means</h2><p>A plain-language interpretation of the current model output.</p></div><span className="explain-badge">{isReal ? 'REAL SIGNAL' : 'AI SIGNAL'}</span></div>
+          <div className="explanation-grid">
+            <article className="explanation-main"><h3>{explanation.title}</h3><p>{explanation.summary}</p></article>
+            <article className="explain-block"><span>01 · CONFIDENCE</span><p>{explanation.confidence}</p></article>
+            <article className="explain-block"><span>02 · WHAT WAS RETURNED</span><ul>{explanation.evidence.map((x, i) => <li key={i}>{x}</li>)}</ul></article>
+            <article className="explain-block"><span>03 · CURRENT LIMITATION</span><p>{explanation.limitation}</p></article>
+            <article className="explain-block"><span>04 · RECOMMENDED NEXT STEP</span><p>{explanation.next}</p></article>
+          </div>
+        </section>}
 
         <section className="stats">
           <div className="stat card"><span>Analyses</span><strong>{history.length}</strong><small>stored locally</small></div>

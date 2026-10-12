@@ -122,3 +122,12 @@ The public GitHub repository is the canonical home for source code, scripts, tes
 GitHub Actions currently provides the repository's CI checks. The standard CI workflow validates the project and builds the frontend; it is not the GPU training environment. GPU training must run on a GPU-enabled runner or external GPU runtime until the project configures suitable GPU infrastructure. The training code and experiment instructions should remain versioned and publicly accessible here.
 
 For image training commands and checkpoint recovery from GitHub Releases, see [Image Training and Checkpoint Recovery](docs/TRAINING.md). The first end-to-end release upload/download/resume cycle and clean-runtime dataset rebuild still need verification.
+
+## Fast final-phase workflow
+
+For the deadline-focused reproducible image baseline, open the [DEEP-GUARD Colab Training notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb). It prepares a public Tiny-GenImage baseline, can restore/publish checkpoints through GitHub Releases, evaluates a held-out test split, and publishes the small report/manifest to `reports/`. Use a GPU runtime and a fine-grained GitHub token with repository Contents read/write permission if checkpoint/report publishing is required.
+
+The fallback dataset protocol is described in [docs/TRAINING.md](docs/TRAINING.md). It is **not** the previous mixed COCO + Nature + Tiny-GenImage V3 experiment; label its metrics accordingly. Final measured results will be published only after the notebook completes successfully.
+
+See [reports/README.md](reports/README.md) for the state of final evaluation artifacts.
+

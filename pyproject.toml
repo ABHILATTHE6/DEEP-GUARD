@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "deep-guard"
 version = "0.1.0"
@@ -41,3 +45,8 @@ target-version = "py311"
 python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["backend*", "ml*"]
+exclude = ["frontend*", "data*", "tests*", "scripts*"]

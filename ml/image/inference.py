@@ -13,6 +13,7 @@ CLASSES = ["ai_generated", "real"]
 DROPOUT = 0.2
 AI_THRESHOLD = 0.75
 REAL_THRESHOLD = 0.35
+UNCERTAINTY_MARGIN = 0.03
 
 
 def _build_model(num_classes: int) -> torch.nn.Module:
@@ -25,18 +26,30 @@ def _build_model(num_classes: int) -> torch.nn.Module:
     return model
 
 
-def _verdict(ai_score: float) -> tuple[str, str]:
+def _verdict(
+    ai_score: float,
+    real_score: float,
+    calibrated_real_threshold: float | None = None,
+) -> tuple[str, str]:
+    """Use validation-calibrated threshold when present; otherwise use fallback bands."""
+    if calibrated_real_threshold is not None:
+        if abs(real_score - calibrated_real_threshold) <= UNCERTAINTY_MARGIN:
+            return "uncertain", "near_calibrated_threshold"
+        if real_score >= calibrated_real_threshold:
+            return "likely_real", "validation_calibrated_real_threshold"
+        return "likely_ai_generated", "validation_calibrated_ai_threshold"
+
     if ai_score >= AI_THRESHOLD:
-        return "likely_ai_generated", "strong_ai_signal"
+        return "likely_ai_generated", "fallback_strong_ai_signal"
     if ai_score <= REAL_THRESHOLD:
-        return "likely_real", "strong_real_signal"
-    return "uncertain", "mixed_model_signal"
+        return "likely_real", "fallback_strong_real_signal"
+    return "uncertain", "fallback_mixed_model_signal"
 
 
 def predict(path: Path, checkpoint_path: Path) -> dict:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    state = checkpoint["model_state_dict"]
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
+    state = checkpoint.get("model_state_dict", checkpoint)
     classes = checkpoint.get("classes", CLASSES)
 
     model = _build_model(len(classes))
@@ -45,10 +58,11 @@ def predict(path: Path, checkpoint_path: Path) -> dict:
     model.eval()
 
     weights = EfficientNet_B0_Weights.DEFAULT
-    image = Image.open(path).convert("RGB")
+    with Image.open(path) as opened:
+        image = opened.convert("RGB")
     tensor = weights.transforms()(image).unsqueeze(0).to(device)
 
-    with torch.no_grad():
+    with torch.inference_mode():
         logits = model(tensor)
         probabilities = torch.softmax(logits, dim=1)[0]
 
@@ -58,17 +72,27 @@ def predict(path: Path, checkpoint_path: Path) -> dict:
     real_score = float(probabilities[real_index].item())
     predicted_index = int(torch.argmax(probabilities).item())
     raw_label = classes[predicted_index]
-    verdict, signal = _verdict(ai_score)
+
+    threshold = checkpoint.get("real_probability_threshold")
+    if threshold is not None:
+        threshold = float(threshold)
+    verdict, signal = _verdict(ai_score, real_score, threshold)
 
     return {
         "label": raw_label,
         "verdict": verdict,
         "confidence": max(ai_score, real_score),
+        "ai_probability": ai_score,
+        "real_probability": real_score,
         "ai_score": ai_score,
         "real_score": real_score,
+        "decision_threshold": threshold,
         "signal": signal,
-        "model": "deepguard-image-v1",
+        "model": checkpoint.get("model_name", "deepguard-image-efficientnet-b0"),
         "classes": classes,
-        "calibrated": False,
-        "note": "Model score is not proof of image provenance; uncertain is used for borderline predictions.",
+        "calibrated": threshold is not None,
+        "note": (
+            "Threshold was selected using validation data only; model scores are not proof "
+            "of image provenance. Borderline scores are reported as uncertain."
+        ),
     }

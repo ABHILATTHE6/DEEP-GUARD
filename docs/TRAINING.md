@@ -2,6 +2,25 @@
 
 This guide describes the repository's resumable image training script. The dataset preparation pipeline is still a separate step: before training, supply the expected folder structure shown below.
 
+## Fast dataset recovery (public baseline)
+
+If the previous Colab temporary files disappeared, this repository now includes a streaming preparation script using the public [TheKernel01/Tiny-GenImage dataset on Hugging Face](https://huggingface.co/datasets/TheKernel01/Tiny-GenImage). Its dataset card lists the license as CC-BY-NC-SA 4.0; review the current source terms and cite the original dataset authors in the project report.
+
+Run this in a fresh Colab runtime from the repository root:
+
+```bash
+python -m pip install "datasets>=3,<5" "pillow>=10,<12" "scikit-learn>=1.5,<2"
+python scripts/prepare_tiny_genimage_hf.py \
+  --output /content/deepguard-tiny \
+  --train-per-class 7000 \
+  --eval-per-class 875 \
+  --seed 42
+```
+
+The preparation streams from the source dataset and writes 7,000 images per class to train and 875 per class each to validation and test by default. The source training split supplies train; the source validation split is divided into separate validation and test samples. The script writes `dataset_manifest.json` and can replay a seeded stream to continue a partial preparation. It may still need to download several gigabytes; do not disconnect it before it completes.
+
+**This is a fast, reproducible Tiny-GenImage baseline, not the earlier mixed Tiny-GenImage + COCO + Nature V3 dataset.** If this fallback is used for the final demo, label its model and metrics as the Tiny-GenImage baseline. Do not compare its result to previous mixed-dataset metrics as though they came from the same test set.
+
 ## 1. Expected data layout
 
 ```text

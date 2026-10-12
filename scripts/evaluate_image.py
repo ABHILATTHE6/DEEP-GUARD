@@ -20,6 +20,7 @@ from torch.utils.data import DataLoader
 from ml.image.config import ImageModelConfig
 from ml.image.dataset import build_image_dataset
 from ml.image.model import build_model
+from ml.image.metrics import calibrate_real_probability_threshold
 
 
 def probabilities_for(model: torch.nn.Module, loader: DataLoader, device: torch.device) -> tuple[np.ndarray, np.ndarray]:
@@ -32,35 +33,6 @@ def probabilities_for(model: torch.nn.Module, loader: DataLoader, device: torch.
             all_labels.append(labels.cpu())
             all_probs.append(torch.softmax(logits, dim=1).cpu())
     return torch.cat(all_labels).numpy(), torch.cat(all_probs).numpy()
-
-
-def calibrate_real_threshold(
-    labels: np.ndarray,
-    probabilities: np.ndarray,
-    classes: list[str],
-    target_real_fpr: float,
-) -> tuple[float, float, float]:
-    ai_index = classes.index("ai_generated")
-    real_index = classes.index("real")
-    ai_mask = labels == ai_index
-    real_mask = labels == real_index
-    real_scores = probabilities[:, real_index]
-    unique_scores = np.unique(real_scores)
-    candidates = np.unique(
-        np.concatenate(([0.0], (unique_scores[:-1] + unique_scores[1:]) / 2.0, [1.0]))
-    )
-    best: tuple[float, float, float] | None = None
-    for threshold in candidates:
-        predicted_ai = real_scores < threshold
-        ai_recall = float(predicted_ai[ai_mask].mean())
-        real_fpr = float(predicted_ai[real_mask].mean())
-        if real_fpr <= target_real_fpr:
-            candidate = (ai_recall, -real_fpr, -float(threshold))
-            if best is None or candidate > best:
-                best = candidate
-    if best is None:
-        return 0.0, 0.0, 0.0
-    return -best[2], best[0], -best[1]
 
 
 def metrics_for(
@@ -141,7 +113,7 @@ def main() -> None:
     val_labels, val_probs = probabilities_for(model, val_loader, device)
     test_labels, test_probs = probabilities_for(model, test_loader, device)
 
-    threshold, val_ai_recall, val_real_fpr = calibrate_real_threshold(
+    threshold, val_ai_recall, val_real_fpr = calibrate_real_probability_threshold(
         val_labels, val_probs, classes, args.target_real_fpr
     )
     report = {

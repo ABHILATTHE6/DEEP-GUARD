@@ -60,6 +60,42 @@ def _publish_checkpoint(path: Path, repo: str, tag: str, asset_name: str) -> Non
     subprocess.run(command, check=True)
 
 
+def _calibrate_real_threshold(
+    labels: np.ndarray,
+    probabilities: np.ndarray,
+    classes: list[str],
+    target_real_fpr: float,
+) -> tuple[float, float, float]:
+    """Maximize AI recall while keeping real images mislabeled AI within the FPR cap."""
+    ai_index = classes.index("ai_generated")
+    real_index = classes.index("real")
+    ai_mask = labels == ai_index
+    real_mask = labels == real_index
+    real_scores = probabilities[:, real_index]
+    if not ai_mask.any() or not real_mask.any():
+        raise ValueError("Validation split must contain both AI-generated and real images.")
+
+    unique_scores = np.unique(real_scores)
+    midpoints = (unique_scores[:-1] + unique_scores[1:]) / 2.0
+    candidates = np.unique(np.concatenate(([0.0], midpoints, [1.0])))
+
+    best: tuple[float, float, float] | None = None
+    # Decision: real if P(real) >= threshold, otherwise AI-generated.
+    for threshold in candidates:
+        predicted_ai = real_scores < threshold
+        ai_recall = float(predicted_ai[ai_mask].mean())
+        real_fpr = float(predicted_ai[real_mask].mean())
+        if real_fpr <= target_real_fpr:
+            candidate = (ai_recall, -real_fpr, -float(threshold))
+            if best is None or candidate > best:
+                best = candidate
+
+    if best is None:
+        return 0.0, 0.0, 0.0
+    threshold = -best[2]
+    return threshold, best[0], -best[1]
+
+
 def _checkpoint(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
@@ -72,6 +108,10 @@ def _checkpoint(
     config: ImageModelConfig,
     seed: int,
     loader_generator: torch.Generator,
+    real_probability_threshold: float,
+    val_ai_recall_at_threshold: float,
+    val_real_fpr_at_threshold: float,
+    target_real_fpr: float,
 ) -> dict:
     return {
         "format_version": 2,
@@ -83,6 +123,10 @@ def _checkpoint(
         "best_val_auc": float(best_val_auc),
         "val_accuracy": float(val_accuracy),
         "val_auc": float(val_auc),
+        "real_probability_threshold": float(real_probability_threshold),
+        "val_ai_recall_at_threshold": float(val_ai_recall_at_threshold),
+        "val_real_fpr_at_threshold": float(val_real_fpr_at_threshold),
+        "target_real_fpr": float(target_real_fpr),
         "classes": list(classes),
         "training_config": {
             "image_size": config.image_size,
@@ -120,6 +164,12 @@ def main() -> None:
     parser.add_argument("--num-workers", type=int, default=2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
+        "--target-real-fpr",
+        type=float,
+        default=0.03,
+        help="Maximum validation false-positive rate on real images for threshold calibration",
+    )
+    parser.add_argument(
         "--resume-from",
         type=Path,
         default=None,
@@ -148,6 +198,8 @@ def main() -> None:
         raise ValueError("--batch-size must be at least 1")
     if args.num_workers < 0:
         raise ValueError("--num-workers cannot be negative")
+    if not 0.0 <= args.target_real_fpr <= 1.0:
+        raise ValueError("--target-real-fpr must be between 0 and 1")
 
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -274,6 +326,14 @@ def main() -> None:
         ai_index = train_ds.classes.index("ai_generated")
         ai_binary_labels = (all_labels == ai_index).astype(np.int32)
         val_auc = float(roc_auc_score(ai_binary_labels, all_probabilities[:, ai_index]))
+        real_probability_threshold, val_ai_recall_at_threshold, val_real_fpr_at_threshold = (
+            _calibrate_real_threshold(
+                all_labels,
+                all_probabilities,
+                train_ds.classes,
+                args.target_real_fpr,
+            )
+        )
         val_accuracy = correct / total if total else 0.0
         mean_loss = total_loss / total_seen if total_seen else 0.0
 
@@ -293,6 +353,10 @@ def main() -> None:
             config=config,
             seed=args.seed,
             loader_generator=loader_generator,
+            real_probability_threshold=real_probability_threshold,
+            val_ai_recall_at_threshold=val_ai_recall_at_threshold,
+            val_real_fpr_at_threshold=val_real_fpr_at_threshold,
+            target_real_fpr=args.target_real_fpr,
         )
         _atomic_save(payload, args.output)
         if improved:
@@ -321,6 +385,9 @@ def main() -> None:
             f"val_accuracy={val_accuracy:.4f} "
             f"val_ai_positive_auc={val_auc:.4f} "
             f"best_auc={best_val_auc:.4f} "
+            f"real_threshold={real_probability_threshold:.4f} "
+            f"val_ai_recall={val_ai_recall_at_threshold:.4f} "
+            f"val_real_fpr={val_real_fpr_at_threshold:.4f} "
             f"last_checkpoint={args.output}"
         )
 

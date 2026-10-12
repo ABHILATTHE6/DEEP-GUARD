@@ -121,3 +121,4 @@ The public GitHub repository is the canonical home for source code, scripts, tes
 
 GitHub Actions currently provides the repository's CI checks. The standard CI workflow validates the project and builds the frontend; it is not the GPU training environment. GPU training must run on a GPU-enabled runner or external GPU runtime until the project configures suitable GPU infrastructure. The training code and experiment instructions should remain versioned and publicly accessible here.
 
+For image training commands and checkpoint recovery from GitHub Releases, see [Image Training and Checkpoint Recovery](docs/TRAINING.md). The first end-to-end release upload/download/resume cycle and clean-runtime dataset rebuild still need verification.

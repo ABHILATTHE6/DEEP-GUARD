@@ -42,15 +42,18 @@ The ImageFolder class order is alphabetical: `ai_generated` is index 0 and `real
 
 ## 2. Install and run
 
-From the repository root in Colab or another Linux environment:
+The fastest supported route is the [public Colab notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb), which runs the preparation, checkpoint recovery, training, evaluation, and report publication steps in order.
+
+For a manually prepared dataset following the layout above, from the repository root run:
 
 ```bash
 python -m pip install -e ".[ml,dev]"
 python scripts/train_image.py \
-  --train /content/deepguard-v3/train \
-  --val /content/deepguard-v3/val \
+  --train /content/deepguard-tiny/train \
+  --val /content/deepguard-tiny/val \
   --epochs 10 \
   --batch-size 64 \
+  --target-real-fpr 0.03 \
   --output artifacts/image_training_last.pt \
   --best-output artifacts/image_training_best.pt
 ```
@@ -66,8 +69,8 @@ The repository includes `scripts/github_release_checkpoint.py`. It creates/uses 
 For the account that owns the repository:
 
 1. Create a fine-grained personal access token limited to this repository, granting **Contents: read and write**. Do not paste the token into a notebook cell or commit it.
-2. Store it in the notebook provider's secret manager as `GH_TOKEN`. In Google Colab, add a notebook secret named `GH_TOKEN` and grant the notebook access to it.
-3. Read that secret into the process environment before running training:
+2. Provide it to the runtime as `GH_TOKEN`. You may store it in Colab Secrets or use the public notebook's hidden input prompt.
+3. If using Colab Secrets, read the secret into the process environment before running training:
 
 ```python
 import os
@@ -118,7 +121,7 @@ The download operation does not require a token when the release is public. Uplo
 
 ## 5. What this does not persist
 
-GitHub Release sync preserves the training checkpoint, including model weights, optimizer state, scaler state, completed epoch, best validation AUC, class mapping, and random-number generator state. It does **not** preserve the dataset directory from Colab. The repository still needs a reproducible dataset download/preparation script using the chosen sources and their licenses. Until that exists and has been tested from a clean runtime, dataset reconstruction remains a manual prerequisite.
+GitHub Release sync preserves the training checkpoint, including model weights, optimizer state, scaler state, completed epoch, best validation AUC, calibrated decision threshold, class mapping, and random-number generator state. It does **not** preserve the dataset directory from Colab. The repository now has a scripted download/preparation path for the Tiny-GenImage fallback, but it still needs to be executed successfully from a clean runtime before the full workflow can be considered verified.
 
 A checkpoint also does not guarantee bit-for-bit identical training after a restart, since machine/software versions and data-loader worker behavior can vary. Record the dataset version, split manifest, environment, and seed with the experiment.
 

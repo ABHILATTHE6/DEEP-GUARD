@@ -43,7 +43,10 @@ def calibrate_real_probability_threshold(
     if not ai_mask.any() or not real_mask.any():
         raise ValueError("Validation split must contain both AI-generated and real images.")
 
-    unique_scores = np.unique(real_scores)
+    # Candidate boundaries must include scores from both classes: an AI score
+    # can determine the maximum-recall feasible threshold even when it lies
+    # between two real-image scores.
+    unique_scores = np.unique(probabilities[:, real_index])
     midpoints = (unique_scores[:-1] + unique_scores[1:]) / 2.0
     candidates = np.unique(np.concatenate(([0.0], midpoints, [1.0])))
 

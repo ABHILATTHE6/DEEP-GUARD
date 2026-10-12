@@ -1,4 +1,5 @@
 # Python bytecode, caches and virtual environments
+*.egg-info/
 __pycache__/
 *.py[cod]
 .venv/

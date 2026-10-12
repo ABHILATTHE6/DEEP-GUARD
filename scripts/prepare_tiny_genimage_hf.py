@@ -154,10 +154,10 @@ def prepare_validation_test(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("/content/deepguard-tiny"))
-    parser.add_argument("--train-per-class", type=int, default=7000)
-    parser.add_argument("--eval-per-class", type=int, default=875)
+    parser.add_argument("--train-per-class", type=int, default=3000)
+    parser.add_argument("--eval-per-class", type=int, default=400)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--buffer-size", type=int, default=10000)
+    parser.add_argument("--buffer-size", type=int, default=4000)
     args = parser.parse_args()
 
     if min(args.train_per_class, args.eval_per_class, args.buffer_size) < 1:

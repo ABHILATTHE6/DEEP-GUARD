@@ -1,4 +1,5 @@
 """Modality routing and evidence contract for DEEP-Guard."""
+
 from __future__ import annotations
 
 import mimetypes
@@ -22,48 +23,71 @@ def _image(path: str) -> dict:
             "status": "model_not_configured",
             "model": "deepguard-image-v1",
             "evidence": ["No trained checkpoint configured for API inference."],
-            "summary": "DEEP-Guard could not assess this image because the trained image checkpoint is not configured.",
+            "summary": (
+                "DEEP-Guard could not assess this image because the trained image checkpoint "
+                "is not configured."
+            ),
         }
 
-    result = predict(path, checkpoint)
-    label = str(result["label"])
-    confidence = float(result["confidence"])
-    ai_probability = float(result.get("ai_probability", confidence if label == "ai_generated" else 1.0 - confidence))
-    real_probability = 1.0 - ai_probability
-    verdict = "likely_ai_generated" if label == "ai_generated" else "likely_real"
+    result = predict(Path(path), Path(checkpoint))
+    label = str(result.get("label", "unknown"))
+    confidence = float(result.get("confidence", 0.0))
+    ai_probability = float(
+        result.get(
+            "ai_probability",
+            result.get("ai_score", confidence if label == "ai_generated" else 1.0 - confidence),
+        )
+    )
+    real_probability = float(
+        result.get("real_probability", result.get("real_score", 1.0 - ai_probability))
+    )
+    verdict = str(result.get("verdict", "uncertain"))
+    model = str(result.get("model", "deepguard-image-unknown"))
+    threshold = result.get("decision_threshold")
 
     if verdict == "likely_ai_generated":
         summary = (
-            f"The image is classified as likely AI-generated with {confidence * 100:.1f}% model confidence. "
-            f"The model assigns approximately {ai_probability * 100:.1f}% probability to the AI-generated class "
-            f"and {real_probability * 100:.1f}% to the real class."
+            f"The image is classified as likely AI-generated with {confidence * 100:.1f}% "
+            f"maximum class probability. The model assigns {ai_probability * 100:.1f}% to "
+            f"the AI-generated class and {real_probability * 100:.1f}% to the real class."
+        )
+    elif verdict == "likely_real":
+        summary = (
+            f"The image is classified as likely real with {confidence * 100:.1f}% maximum "
+            f"class probability. The model assigns {real_probability * 100:.1f}% to the real "
+            f"class and {ai_probability * 100:.1f}% to the AI-generated class."
         )
     else:
         summary = (
-            f"The image is classified as likely real with {confidence * 100:.1f}% model confidence. "
-            f"The model assigns approximately {real_probability * 100:.1f}% probability to the real class "
-            f"and {ai_probability * 100:.1f}% to the AI-generated class."
+            "The image assessment is uncertain. The model's scores are close to its decision "
+            "boundary or do not support a confident binary verdict. Review the original source "
+            "and additional context."
         )
 
     evidence = [
         "EfficientNet-B0 transfer-learning model prediction.",
         f"AI-generated class score: {ai_probability * 100:.1f}%.",
         f"Real class score: {real_probability * 100:.1f}%.",
-        "The score represents model confidence, not definitive proof of image origin.",
+        "Model scores are not definitive proof of image origin.",
     ]
+    if threshold is not None:
+        evidence.append(
+            f"Validation-calibrated decision threshold on P(real): {float(threshold):.4f}."
+        )
 
     return {
         "modality": "image",
         "verdict": verdict,
         "confidence": confidence,
         "status": "ready",
-        "model": "deepguard-image-v1",
+        "model": model,
         "evidence": evidence,
         "summary": summary,
         "scores": {
             "ai_generated": ai_probability,
             "real": real_probability,
         },
+        "decision_threshold": threshold,
         "explainability": {
             "available": False,
             "message": "Pixel-level heatmaps are not enabled in the current baseline model.",
@@ -79,7 +103,10 @@ def _untrained(modality: str, model: str) -> dict:
         "status": "experimental_model_not_trained",
         "model": model,
         "evidence": [f"{modality.title()} model is not yet trained; no synthetic result is claimed."],
-        "summary": f"The {modality} pipeline is present, but its model has not yet been trained, so DEEP-Guard is not making a detection claim.",
+        "summary": (
+            f"The {modality} pipeline is present, but its model has not yet been trained, "
+            "so DEEP-Guard is not making a detection claim."
+        ),
     }
 
 

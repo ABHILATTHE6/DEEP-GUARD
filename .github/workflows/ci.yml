@@ -14,10 +14,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install lightweight test dependencies
+      - name: Install project and test dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest numpy
+          pip install -e . pytest
       - name: Check Python syntax
         run: python -m compileall -q backend ml scripts
       - name: Run tests when present

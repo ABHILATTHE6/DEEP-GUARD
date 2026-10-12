@@ -15,7 +15,10 @@ AI-positive validation ROC-AUC; the held-out test set is not used in this script
 from __future__ import annotations
 
 import argparse
+import os
 import random
+import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +39,25 @@ def _atomic_save(payload: dict, path: Path) -> None:
     temporary = path.with_suffix(path.suffix + ".tmp")
     torch.save(payload, temporary)
     temporary.replace(path)
+
+
+def _publish_checkpoint(path: Path, repo: str, tag: str, asset_name: str) -> None:
+    """Publish a checkpoint as a public GitHub Release asset."""
+    utility = Path(__file__).with_name("github_release_checkpoint.py")
+    command = [
+        sys.executable,
+        str(utility),
+        "upload",
+        "--file",
+        str(path),
+        "--repo",
+        repo,
+        "--tag",
+        tag,
+        "--asset-name",
+        asset_name,
+    ]
+    subprocess.run(command, check=True)
 
 
 def _checkpoint(
@@ -103,7 +125,22 @@ def main() -> None:
         default=None,
         help="Resume from a previous latest checkpoint downloaded from persistent storage",
     )
+    parser.add_argument(
+        "--publish-to-github",
+        action="store_true",
+        help="Upload latest (each epoch) and best checkpoints to a public GitHub Release",
+    )
+    parser.add_argument("--github-repo", default="ABHILATTHE6/DEEP-GUARD")
+    parser.add_argument("--github-release-tag", default="training-checkpoints")
+    parser.add_argument("--github-latest-asset", default="image-training-latest.pt")
+    parser.add_argument("--github-best-asset", default="image-training-best.pt")
     args = parser.parse_args()
+
+    if args.publish_to_github and not (os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")):
+        raise EnvironmentError(
+            "--publish-to-github requires GH_TOKEN (or GITHUB_TOKEN) in the environment. "
+            "Store the token in Colab Secrets or another secret manager; do not put it in code."
+        )
 
     if args.epochs < 1:
         raise ValueError("--epochs must be at least 1")
@@ -260,6 +297,23 @@ def main() -> None:
         _atomic_save(payload, args.output)
         if improved:
             _atomic_save(payload, best_output)
+
+        # Upload only after the local atomic write succeeds. If upload fails, the
+        # local checkpoint remains available for another attempt.
+        if args.publish_to_github:
+            _publish_checkpoint(
+                args.output,
+                args.github_repo,
+                args.github_release_tag,
+                args.github_latest_asset,
+            )
+            if improved:
+                _publish_checkpoint(
+                    best_output,
+                    args.github_repo,
+                    args.github_release_tag,
+                    args.github_best_asset,
+                )
 
         print(
             f"epoch={epoch}/{args.epochs} "

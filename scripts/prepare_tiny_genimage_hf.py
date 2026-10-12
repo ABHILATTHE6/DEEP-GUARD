@@ -36,33 +36,22 @@ def count_images(folder: Path) -> int:
 def save_image(image: Any, destination: Path) -> None:
     """Write the selected image in a consistent RGB JPEG format."""
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with Image.open(image) if isinstance(image, (str, Path)) else _opened_image(image) as opened:
-        opened.convert("RGB").save(destination, "JPEG", quality=95, optimize=True)
-
-
-class _opened_image:
-    """Context manager adapter for a PIL image returned by datasets.Image."""
-
-    def __init__(self, image: Any) -> None:
-        self.image = image
-
-    def __enter__(self) -> Image.Image:
-        return self.image
-
-    def __exit__(self, *_: object) -> None:
-        return None
+    image.convert("RGB").save(destination, "JPEG", quality=95, optimize=True)
 
 
 def prepare_training_split(
     split: Any, output: Path, per_class: int, seed: int, buffer_size: int
 ) -> dict[str, int]:
-    target_counts = {name: count_images(output / "train" / name) for name in SOURCE_LABEL_TO_CLASS.values()}
-    if any(n > per_class for n in target_counts.values()):
+    existing_counts = {name: count_images(output / "train" / name) for name in SOURCE_LABEL_TO_CLASS.values()}
+    if any(n > per_class for n in existing_counts.values()):
         raise ValueError(
-            f"Found more train files than --train-per-class={per_class}: {target_counts}. "
+            f"Found more train files than --train-per-class={per_class}: {existing_counts}. "
             "Use a new --output folder or remove its train folder."
         )
 
+    # Replay the same seeded stream from the beginning on restart. Existing
+    # filenames are skipped, so a partial preparation does not duplicate samples.
+    source_counts = {name: 0 for name in SOURCE_LABEL_TO_CLASS.values()}
     stream = split.shuffle(seed=seed, buffer_size=buffer_size)
     scanned = 0
     for row in stream:
@@ -71,29 +60,29 @@ def prepare_training_split(
         if raw_label not in SOURCE_LABEL_TO_CLASS:
             continue
         class_name = SOURCE_LABEL_TO_CLASS[raw_label]
-        if target_counts[class_name] >= per_class:
-            if all(n >= per_class for n in target_counts.values()):
+        if source_counts[class_name] >= per_class:
+            if all(n >= per_class for n in source_counts.values()):
                 break
             continue
 
-        destination = output / "train" / class_name / f"{target_counts[class_name]:06d}.jpg"
+        destination = output / "train" / class_name / f"{source_counts[class_name]:06d}.jpg"
         try:
             if not destination.exists():
                 save_image(row["image"], destination)
-            target_counts[class_name] += 1
+            source_counts[class_name] += 1
         except (OSError, ValueError, UnidentifiedImageError) as exc:
             print(f"Skipping unreadable training image: {exc}", file=sys.stderr)
 
-        if all(n >= per_class for n in target_counts.values()):
+        if all(n >= per_class for n in source_counts.values()):
             break
 
-    if any(n != per_class for n in target_counts.values()):
+    if any(n != per_class for n in source_counts.values()):
         raise RuntimeError(
             f"Training source ended before reaching {per_class} images per class. "
-            f"Counts={target_counts}; scanned={scanned}"
+            f"Counts={source_counts}; scanned={scanned}"
         )
-    print(f"train counts={target_counts}; rows_scanned={scanned}")
-    return target_counts
+    print(f"train counts={source_counts}; rows_scanned={scanned}")
+    return source_counts
 
 
 def prepare_validation_test(

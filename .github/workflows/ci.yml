@@ -18,6 +18,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
+      - name: Check Python syntax
+        run: python -m compileall -q backend ml scripts
       - name: Run tests when present
         run: |
           if [ -d tests ]; then pytest -q; else echo 'No tests directory yet'; fi

@@ -11,20 +11,20 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Capability | Status |
 |---|---|
 | Repository + project structure | ✅ Implemented |
-| Image EfficientNet-B0 training/evaluation | ✅ Implemented |
-| Image inference API | ✅ Implemented |
+| Image EfficientNet-B0 training/evaluation pipeline | ✅ Code committed; final clean-run benchmark pending |
+| Image inference API | ✅ Implemented; requires a compatible trained checkpoint |
 | React examiner dashboard | ✅ Implemented |
-| Video frame sampling + image-model aggregation | ✅ Implemented |
-| Audio loading + Mel-spectrogram extraction | ✅ Implemented |
-| Multimodal evidence fusion | ✅ Implemented |
-| Grad-CAM utility | ✅ Implemented |
-| CI workflow | ✅ Implemented |
+| Video preprocessing / frame-analysis prototype | ⏳ Needs API integration and evaluation |
+| Audio preprocessing / Mel-spectrogram prototype | ⏳ Feature path present; classifier not trained |
+| Multimodal evidence fusion | ⏳ Architecture planned; end-to-end evaluation pending |
+| Grad-CAM utility | ⏳ Utility exists; not enabled in current inference response |
+| CI workflow | ✅ Configured; verify latest Actions run |
 | Trained video checkpoint | ⏳ Requires dataset + training run |
 | Trained audio checkpoint | ⏳ Requires dataset + training run |
 | Cross-generator benchmark | ⏳ Requires evaluation data |
 | Robustness benchmark | ⏳ Requires evaluation data |
 
-The repository intentionally returns **UNCERTAIN/experimental** when a trained modality checkpoint is unavailable. It does not fabricate benchmark accuracy.
+The API intentionally returns **UNCERTAIN/experimental** for video and audio until those modality models are trained and integrated. The current deadline-focused deliverable is the image pipeline and reproducible evaluation workflow. The final model checkpoint and measured results are not yet published. The repository does not fabricate benchmark accuracy.
 
 ## Architecture
 
@@ -59,9 +59,9 @@ Keep raw datasets outside Git. Register each dataset with its source, license, c
 
 Use the existing training pipeline and run a real experiment. Save the checkpoint and record accuracy, precision, recall, F1, ROC-AUC, confusion matrix, seed, dataset version, and configuration.
 
-### 3. Activate video inference
+### 3. Video and audio are experimental
 
-Set `DEEP_GUARD_IMAGE_CHECKPOINT` to the trained image checkpoint. Run the video frame pipeline and evaluate it on real and manipulated videos. The current implementation samples frames and aggregates image-model probabilities; a temporal model can be added as the research upgrade.
+The API currently reports video and audio as uncertain/experimental rather than presenting an unverified detection result. Frame analysis and audio feature extraction can be developed from the existing prototypes, but modality-specific training data, model checkpoints, integration, and held-out evaluation remain necessary before claiming video/audio detection is operational.
 
 ### 4. Train the audio model
 

@@ -55,7 +55,7 @@ Do not push a dataset or checkpoint to ordinary Git just to make it persistent. 
 
 ## Current status
 
-This document is the target workflow, not evidence that every step has already been completed. Before calling the project fully reproducible, the repository still needs a verified dataset download/preparation path, a checked-in GPU notebook or step-by-step runner, tested resume support in the training script, and a published evaluation report for the final checkpoint. Previous training metrics must not be presented as final if their probability/label orientation or data split has not been verified.
+This document is the target workflow, not evidence that every step has already been completed. A resumable image-training script and GitHub Release checkpoint-sync utility are now checked in and documented in [TRAINING.md](TRAINING.md), but the first end-to-end publish/download/resume cycle has not yet been verified. The repository still needs a clean-runtime dataset download/preparation path, a fully tested public GPU notebook/runner, and a published evaluation report for the final checkpoint. Previous training metrics must not be presented as final if their probability/label orientation or data split has not been verified.
 
 ## Acceptance checklist
 

@@ -112,3 +112,12 @@ A model prediction should not be treated as definitive proof of authenticity or 
 ## Author
 
 **Abhishek Latthe** — [@ABHILATTHE6](https://github.com/ABHILATTHE6)
+
+## Public reproducibility and persistence
+
+The public GitHub repository is the canonical home for source code, scripts, tests, notebooks, configuration, dataset preparation instructions, and verified evaluation reports. See [Public Reproducibility and GitHub-First Workflow](docs/PUBLIC_REPRODUCIBILITY.md) for the intended end-to-end workflow and current completion checklist.
+
+**Important:** Colab's local `/content` storage is temporary. Dataset files and training checkpoints must be restored from a documented source and saved to persistent storage during a run. Large datasets and model checkpoints should not be committed as ordinary Git files; publish only data that may legally be redistributed, and use an appropriate release/artifact location for large binaries.
+
+GitHub Actions currently provides the repository's CI checks. The standard CI workflow validates the project and builds the frontend; it is not the GPU training environment. GPU training must run on a GPU-enabled runner or external GPU runtime until the project configures suitable GPU infrastructure. The training code and experiment instructions should remain versioned and publicly accessible here.
+

@@ -12,12 +12,13 @@ Run this in a fresh Colab runtime from the repository root:
 python -m pip install "datasets>=3,<5" "pillow>=10,<12" "scikit-learn>=1.5,<2"
 python scripts/prepare_tiny_genimage_hf.py \
   --output /content/deepguard-tiny \
-  --train-per-class 7000 \
-  --eval-per-class 875 \
+  --train-per-class 3000 \
+  --eval-per-class 400 \
+  --buffer-size 4000 \
   --seed 42
 ```
 
-The preparation streams from the source dataset and writes 7,000 images per class to train and 875 per class each to validation and test by default. The source training split supplies train; the source validation split is divided into separate validation and test samples. The script writes `dataset_manifest.json` and can replay a seeded stream to continue a partial preparation. It may still need to download several gigabytes; do not disconnect it before it completes.
+The deadline-focused preparation preset streams 3,000 images per class to train and 400 per class each to validation and test. The source training split supplies train; the source validation split is divided into separate validation and test samples. The public source is listed as 8.36 GB overall, so initial preparation can still require significant network transfer. To increase sample counts, adjust these values after the first end-to-end run succeeds. The script writes `dataset_manifest.json` and can replay a seeded stream to continue a partial preparation. It may still need to download several gigabytes; do not disconnect it before it completes.
 
 **This is a fast, reproducible Tiny-GenImage baseline, not the earlier mixed Tiny-GenImage + COCO + Nature V3 dataset.** If this fallback is used for the final demo, label its model and metrics as the Tiny-GenImage baseline. Do not compare its result to previous mixed-dataset metrics as though they came from the same test set.
 
@@ -42,7 +43,7 @@ The ImageFolder class order is alphabetical: `ai_generated` is index 0 and `real
 
 ## 2. Install and run
 
-The fastest supported route is the [public Colab notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb), which runs the preparation, checkpoint recovery, training, evaluation, and report publication steps in order.
+The fastest supported route is the [public Colab notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb), which runs the preparation, checkpoint recovery, training, evaluation, and report publication steps in order. Its deadline-first preset trains with 3,000 images per class and 5 epochs; increase to 10 epochs or a larger sample count only if time permits.
 
 For a manually prepared dataset following the layout above, from the repository root run:
 
@@ -51,7 +52,7 @@ python -m pip install -e ".[ml,dev]"
 python scripts/train_image.py \
   --train /content/deepguard-tiny/train \
   --val /content/deepguard-tiny/val \
-  --epochs 10 \
+  --epochs 5 \
   --batch-size 64 \
   --target-real-fpr 0.03 \
   --output artifacts/image_training_last.pt \

@@ -31,6 +31,7 @@ from torch.utils.data import DataLoader
 from ml.image.config import ImageModelConfig
 from ml.image.dataset import build_image_dataset
 from ml.image.model import build_model
+from ml.image.metrics import calibrate_real_probability_threshold as _calibrate_real_threshold
 
 
 def _atomic_save(payload: dict, path: Path) -> None:
@@ -58,42 +59,6 @@ def _publish_checkpoint(path: Path, repo: str, tag: str, asset_name: str) -> Non
         asset_name,
     ]
     subprocess.run(command, check=True)
-
-
-def _calibrate_real_threshold(
-    labels: np.ndarray,
-    probabilities: np.ndarray,
-    classes: list[str],
-    target_real_fpr: float,
-) -> tuple[float, float, float]:
-    """Maximize AI recall while keeping real images mislabeled AI within the FPR cap."""
-    ai_index = classes.index("ai_generated")
-    real_index = classes.index("real")
-    ai_mask = labels == ai_index
-    real_mask = labels == real_index
-    real_scores = probabilities[:, real_index]
-    if not ai_mask.any() or not real_mask.any():
-        raise ValueError("Validation split must contain both AI-generated and real images.")
-
-    unique_scores = np.unique(real_scores)
-    midpoints = (unique_scores[:-1] + unique_scores[1:]) / 2.0
-    candidates = np.unique(np.concatenate(([0.0], midpoints, [1.0])))
-
-    best: tuple[float, float, float] | None = None
-    # Decision: real if P(real) >= threshold, otherwise AI-generated.
-    for threshold in candidates:
-        predicted_ai = real_scores < threshold
-        ai_recall = float(predicted_ai[ai_mask].mean())
-        real_fpr = float(predicted_ai[real_mask].mean())
-        if real_fpr <= target_real_fpr:
-            candidate = (ai_recall, -real_fpr, -float(threshold))
-            if best is None or candidate > best:
-                best = candidate
-
-    if best is None:
-        return 0.0, 0.0, 0.0
-    threshold = -best[2]
-    return threshold, best[0], -best[1]
 
 
 def _checkpoint(

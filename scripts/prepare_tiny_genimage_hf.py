@@ -35,6 +35,8 @@ def count_images(folder: Path) -> int:
 
 def save_image(image: Any, destination: Path) -> None:
     """Write the selected image in a consistent RGB JPEG format."""
+    if image is None or not hasattr(image, "convert"):
+        raise ValueError("Dataset row does not contain a decoded image.")
     destination.parent.mkdir(parents=True, exist_ok=True)
     image.convert("RGB").save(destination, "JPEG", quality=95, optimize=True)
 

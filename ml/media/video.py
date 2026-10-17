@@ -34,10 +34,14 @@ def analyze_video(path: Path, image_checkpoint: Path, sample_count: int = 8) -> 
         if total_frames < 1:
             raise ValueError("The uploaded video has no readable frames.")
 
-        frame_indices = sorted({
-            int(round(i * max(total_frames - 1, 0) / max(sample_count - 1, 1)))
-            for i in range(min(sample_count, total_frames))
-        })
+        sample_total = min(sample_count, total_frames)
+        if sample_total == 1:
+            frame_indices = [0]
+        else:
+            frame_indices = sorted({
+                int(round(i * (total_frames - 1) / (sample_total - 1)))
+                for i in range(sample_total)
+            })
         frames: list[Image.Image] = []
         for frame_index in frame_indices:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_index)

@@ -126,6 +126,10 @@ GitHub Release sync preserves the training checkpoint, including model weights, 
 
 A checkpoint also does not guarantee bit-for-bit identical training after a restart, since machine/software versions and data-loader worker behavior can vary. Record the dataset version, split manifest, environment, and seed with the experiment.
 
+## Phase 2: diverse-generator experiment
+
+For a separate experiment aimed at generalization to more generators, use the [OpenFake experiment notebook](../notebooks/DEEP_GUARD_OpenFake_Experiment.ipynb) and [experiment guide](OPENFAKE_EXPERIMENT.md). It keeps the current Tiny-GenImage checkpoint/report unchanged, evaluates both checkpoints on the same held-out OpenFake OOD and in-the-wild test subsets, and does not upload the candidate checkpoint to the public release. Review dataset and generator-specific terms first; the candidate weights should not be redistributed until licensing is cleared.
+
 ## Current status
 
 The resume and release-sync code is committed, but the first end-to-end publish/download/resume cycle and the clean-runtime dataset reconstruction have not yet been verified. Do not treat the project as fully reset-proof until those checks pass and a real evaluation report has been recorded.

@@ -132,7 +132,7 @@ jobs:
                   return SimpleNamespace(logits=logits)
 
           sample_rate = 16000
-          time = np.arange(sample_rate * 2, dtype=np.float32) / sample_rate
+          time = np.arange(sample_rate * 3, dtype=np.float32) / sample_rate
           waveform = (0.2 * np.sin(2 * np.pi * 220 * time)).astype(np.float32)
           audio_path = Path("/tmp/deep-guard-smoke.wav")
           sf.write(audio_path, waveform, sample_rate)

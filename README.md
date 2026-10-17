@@ -86,8 +86,8 @@ For the full Windows/PowerShell walkthrough and examiner script, see [Final Demo
 Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
 
 ```powershell
-$env:DEEP_GUARD_IMAGE_CHECKPOINT = (Resolve-Path ".\\artifacts\\image_training_best.pt").Path
-.\\.venv\\Scripts\\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+$env:DEEP_GUARD_IMAGE_CHECKPOINT = (Resolve-Path ".\artifacts\image_training_best.pt").Path
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 In a second terminal, start the frontend:

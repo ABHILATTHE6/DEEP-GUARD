@@ -56,7 +56,7 @@ The repository's GitHub Actions workflow also runs Python checks and builds the 
 2. **Show the dashboard and API connection.** Point out the upload panel, result/evidence panel, model registry, and recent local analysis history.
 3. **Upload a sample image.** Click *Run detection*. Explain the returned verdict, AI/real class scores, selected-class score, model name, and evidence text. Do not claim the score is a calibrated probability of real-world authenticity.
 4. **Demonstrate uncertainty and limitations.** Mention that individual AI-generated images can be classified as real. The current model should be treated as a baseline, not a definitive detector.
-5. **Show model availability.** The image detector is trained; video/audio remain experimental/untrained; multimodal fusion is planned/not yet validated.
+5. **Show model availability.** The image detector is the trained project baseline; video uses frame aggregation; audio uses an external pretrained speech classifier; both remain experimental and multimodal fusion is not yet validated.
 6. **Show evaluation evidence.** Open the [human-readable baseline report](../reports/image_evaluation_tiny_genimage.md) and [dataset manifest](../reports/dataset_manifest.json). Explain that the metrics belong to the 3,000-per-class Tiny-GenImage baseline, not the earlier mixed V3 experiment.
 7. **Show reproducibility.** Point to the training notebook, scripts, report JSON, manifest, and checkpoint release in GitHub.
 

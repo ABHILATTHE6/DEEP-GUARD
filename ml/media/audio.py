@@ -14,8 +14,8 @@ from typing import Any
 MODEL_ID = "garystafford/wav2vec2-deepfake-voice-detector"
 MODEL_REVISION = "c5bffec702b5fc18b7b7523f1891036de198643a"
 SAMPLE_RATE = 16000
-MAX_ANALYZED_SECONDS = 30.0
-MIN_ANALYZED_SECONDS = 1.0
+MAX_ANALYZED_SECONDS = 13.0
+MIN_ANALYZED_SECONDS = 2.5
 
 
 @lru_cache(maxsize=1)
@@ -84,7 +84,7 @@ def analyze_audio(path: Path, model: Any | None = None) -> dict[str, Any]:
             "confidence": None,
             "status": "input_too_short",
             "model": MODEL_ID,
-            "evidence": ["Audio clips shorter than one second are not assessed."],
+            "evidence": ["Audio clips shorter than 2.5 seconds are not assessed."],
             "summary": "The audio is too short for a meaningful speech deepfake assessment.",
             "explainability": {"available": False, "message": "Audio attribution plots are not available."},
         }

@@ -11,7 +11,7 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Capability | Status |
 |---|---|
 | Repository + project structure | ✅ Implemented |
-| Image EfficientNet-B0 training/evaluation pipeline | ✅ Code committed; final clean-run benchmark pending |
+| Image EfficientNet-B0 training/evaluation pipeline | ✅ Trained baseline and held-out evaluation published; clean-runtime reproduction pending |
 | Image inference API | ✅ Implemented; requires a compatible trained checkpoint |
 | React examiner dashboard | ✅ Implemented |
 | Video preprocessing / frame-analysis prototype | ⏳ Needs API integration and evaluation |
@@ -24,7 +24,7 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Cross-generator benchmark | ⏳ Requires evaluation data |
 | Robustness benchmark | ⏳ Requires evaluation data |
 
-The API intentionally returns **UNCERTAIN/experimental** for video and audio until those modality models are trained and integrated. The current deadline-focused deliverable is the image pipeline and reproducible evaluation workflow. The final model checkpoint and measured results are not yet published. The repository does not fabricate benchmark accuracy.
+The API intentionally returns **UNCERTAIN/experimental** for video and audio until those modality models are trained and integrated. The current deadline-focused deliverable is the image pipeline and reproducible evaluation workflow. The best image checkpoint is published in the `training-checkpoints` GitHub Release, and measured Tiny-GenImage baseline results and a dataset manifest are published under `reports/`. The repository does not fabricate benchmark accuracy.
 
 ## Architecture
 
@@ -121,7 +121,7 @@ The public GitHub repository is the canonical home for source code, scripts, tes
 
 GitHub Actions currently provides the repository's CI checks. The standard CI workflow validates the project and builds the frontend; it is not the GPU training environment. GPU training must run on a GPU-enabled runner or external GPU runtime until the project configures suitable GPU infrastructure. The training code and experiment instructions should remain versioned and publicly accessible here.
 
-For image training commands and checkpoint recovery from GitHub Releases, see [Image Training and Checkpoint Recovery](docs/TRAINING.md). The first end-to-end release upload/download/resume cycle and clean-runtime dataset rebuild still need verification.
+For image training commands and checkpoint recovery from GitHub Releases, see [Image Training and Checkpoint Recovery](docs/TRAINING.md). End-to-end release upload/download/resume and a clean-runtime dataset rebuild still need independent verification.
 
 ## Fast final-phase workflow
 
@@ -133,4 +133,4 @@ See [reports/README.md](reports/README.md) for the state of final evaluation art
 
 ## Latest measured image baseline
 
-The held-out Tiny-GenImage baseline evaluation is now published: [human-readable report](reports/image_evaluation_tiny_genimage.md) and [machine-readable JSON](reports/image_evaluation.json). These results are for the 3,000-per-class quick baseline only, not the earlier mixed V3 data protocol. A full clean-runtime reproduction and final manifest/checksum publication still need verification.
+The held-out Tiny-GenImage baseline evaluation is published: [human-readable report](reports/image_evaluation_tiny_genimage.md), [machine-readable JSON](reports/image_evaluation.json), and [dataset manifest](reports/dataset_manifest.json). The published JSON records SHA-256 checksums for the dataset manifest and best checkpoint. These results are for the 3,000-per-class quick baseline only, not the earlier mixed V3 data protocol. A full clean-runtime reproduction still needs verification.

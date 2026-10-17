@@ -1,3 +1,9 @@
+import pytest
+
+pytest.importorskip("torch")
+pytest.importorskip("torchvision")
+pytest.importorskip("PIL")
+
 from PIL import Image
 import torch
 

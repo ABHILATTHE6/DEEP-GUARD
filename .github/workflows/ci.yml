@@ -45,3 +45,59 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build deployment container
         run: docker build --tag deep-guard:ci .
+      - name: Start deployment container
+        run: docker run --detach --name deep-guard-smoke --publish 8080:8080 deep-guard:ci
+      - name: Smoke-test dashboard, health API, and image inference
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:8080/api/v1/health > /tmp/deep-guard-health.json; then
+              break
+            fi
+            sleep 2
+          done
+          cat /tmp/deep-guard-health.json
+          curl --fail --silent http://127.0.0.1:8080/ | grep -q '<div id="root"></div>'
+          python - <<'PY'
+          import struct
+          import zlib
+
+          def chunk(kind: bytes, data: bytes) -> bytes:
+              return (
+                  struct.pack(">I", len(data))
+                  + kind
+                  + data
+                  + struct.pack(">I", zlib.crc32(kind + data) & 0xffffffff)
+              )
+
+          width = height = 32
+          pixels = b"".join(b"\\x00" + bytes((72, 118, 164)) * width for _ in range(height))
+          png = (
+              b"\\x89PNG\\r\\n\\x1a\\n"
+              + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+              + chunk(b"IDAT", zlib.compress(pixels))
+              + chunk(b"IEND", b"")
+          )
+          with open("/tmp/deep-guard-smoke.png", "wb") as image:
+              image.write(png)
+          PY
+          curl --fail --silent --show-error \
+            --form "media=@/tmp/deep-guard-smoke.png;type=image/png" \
+            http://127.0.0.1:8080/api/v1/analyze > /tmp/deep-guard-result.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path("/tmp/deep-guard-result.json").read_text())
+          assert result.get("modality") == "image", result
+          assert result.get("status") == "ready", result
+          assert {"ai_generated", "real"} <= set(result.get("scores", {})), result
+          print("Container inference smoke test passed:", result.get("verdict"), result.get("model"))
+          PY
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs deep-guard-smoke || true
+      - name: Remove deployment container
+        if: always()
+        run: docker rm --force deep-guard-smoke || true

@@ -2,7 +2,7 @@
 
 ## Multimodal AI-Generated Media & Deepfake Detection
 
-DEEP-Guard is a research and engineering platform for assessing the authenticity of digital media across **images, videos, and audio** using task-specific deep-learning pipelines.
+DEEP-Guard is a media-authenticity research prototype with a trained image classifier, experimental frame-aggregated video screening, and an external pretrained speech-audio detector. Image is the only modality with a DEEP-GUARD-trained checkpoint and published held-out benchmark. Video and audio are exposed in the dashboard/API but remain experimental and have not been independently benchmarked by this project.
 
 > **Important:** DEEP-Guard provides an authenticity assessment, not an absolute guarantee. Detectors can fail on unseen generators, transformations, compression, adversarial manipulation, and distribution shifts.
 
@@ -43,7 +43,7 @@ The current operational image path uses the trained EfficientNet-B0 baseline. Vi
              |                |                |
              +----------------+----------------+
                               |
-                       Evidence Fusion
+                 Evidence Fusion (planned)
                               |
                 +-------------+-------------+
                 |             |             |
@@ -109,7 +109,7 @@ Models should be evaluated with task-appropriate metrics including accuracy, pre
 
 ## Why DEEP-Guard is different
 
-DEEP-Guard is not a general-purpose chatbot. It is a specialized authenticity-assessment system that combines modality-specific deep-learning models, explainability, uncertainty-aware evidence fusion, robustness testing, and media provenance signals. The project is designed to expose evidence and limitations rather than present a single unexplained binary answer.
+DEEP-Guard is not a general-purpose chatbot. It is a media-authenticity assessment prototype: it currently provides image inference with published evaluation evidence, experimental video-frame score aggregation, and an external pretrained speech-audio classifier. End-to-end evidence fusion, full multimodal calibration, robust cross-domain testing, and provenance integration remain future work. The project is designed to expose scores and known limits rather than present an unexplained binary answer.
 
 ## Responsible AI
 

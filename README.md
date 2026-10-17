@@ -18,7 +18,7 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Audio preprocessing / Mel-spectrogram prototype | ⏳ Feature path present; classifier not trained |
 | Multimodal evidence fusion | ⏳ Architecture planned; end-to-end evaluation pending |
 | Grad-CAM utility | ⏳ Utility exists; not enabled in current inference response |
-| CI workflow | ✅ Python and frontend jobs pass on the latest verified run |
+| CI workflow | ✅ Python tests, frontend build, container startup, and image-inference smoke tests pass |
 | Trained video checkpoint | ⏳ Requires dataset + training run |
 | Trained audio checkpoint | ⏳ Requires dataset + training run |
 | Cross-generator benchmark | ⏳ Requires evaluation data |
@@ -81,7 +81,7 @@ Use the current dashboard to upload and analyze an image, show the model scores 
 
 ## Local run
 
-For the full Windows/PowerShell walkthrough and examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md). For presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
+For quick local startup on Windows, see [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md) and `scripts/start_demo.ps1`. For the full examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md); for presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
 
 Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
 

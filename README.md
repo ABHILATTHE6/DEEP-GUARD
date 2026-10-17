@@ -14,8 +14,8 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Image EfficientNet-B0 training/evaluation pipeline | ✅ Trained baseline and held-out evaluation published; clean-runtime reproduction pending |
 | Image inference API | ✅ Implemented; requires a compatible trained checkpoint |
 | React examiner dashboard | ✅ Implemented |
-| Video preprocessing / frame-analysis prototype | ⏳ Needs API integration and evaluation |
-| Audio preprocessing / Mel-spectrogram prototype | ⏳ Feature path present; classifier not trained |
+| Video screening | ✅ Dashboard/API accepts video; scores up to 8 sampled frames with the image checkpoint; experimental, no temporal model or video benchmark |
+| Audio screening | ✅ Dashboard/API supports an external pretrained Wav2Vec2 speech detector; first use downloads ~1.26 GB; experimental, no DEEP-GUARD audio benchmark |
 | Multimodal evidence fusion | ⏳ Architecture planned; end-to-end evaluation pending |
 | Grad-CAM utility | ⏳ Utility exists; not enabled in current inference response |
 | CI workflow | ✅ Python tests, frontend build, container startup, and image-inference smoke tests pass |
@@ -24,7 +24,7 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Cross-generator benchmark | ⏳ Requires evaluation data |
 | Robustness benchmark | ⏳ Requires evaluation data |
 
-The API intentionally returns **UNCERTAIN/experimental** for video and audio until those modality models are trained and integrated. The current deadline-focused deliverable is the image pipeline and reproducible evaluation workflow. The best image checkpoint is published in the `training-checkpoints` GitHub Release, and measured Tiny-GenImage baseline results and a dataset manifest are published under `reports/`. The repository does not fabricate benchmark accuracy.
+The current operational image path uses the trained EfficientNet-B0 baseline. Video requests run an **experimental frame-aggregation screen** using up to eight sampled frames; this is not a temporal video model and has not been benchmarked on a dedicated video dataset. Audio requests use an external pretrained Wav2Vec2 speech detector (English-focused; about 1.26 GB of weights downloaded on first use); this external model has not been independently benchmarked by DEEP-GUARD. These two modalities are functional prototypes, not DEEP-GUARD-trained/validated detectors. The best image checkpoint is published in the `training-checkpoints` GitHub Release, and measured Tiny-GenImage baseline results and a dataset manifest are published under `reports/`. The repository does not fabricate benchmark accuracy.
 
 ## Architecture
 
@@ -37,8 +37,9 @@ The API intentionally returns **UNCERTAIN/experimental** for video and audio unt
              |                |                |
            IMAGE            VIDEO            AUDIO
              |                |                |
-        EfficientNet      sampled frames   Mel spectrogram
-        + Grad-CAM        + image model    + audio model
+        EfficientNet      sampled frames   Wav2Vec2 speech
+        + Grad-CAM        + image model    classifier
+
              |                |                |
              +----------------+----------------+
                               |
@@ -81,7 +82,7 @@ Use the current dashboard to upload and analyze an image, show the model scores 
 
 ## Local run
 
-For quick local startup on Windows, see [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md) and `scripts/start_demo.ps1`. For the full examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md); for presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
+For quick local startup on Windows, see [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md) and `scripts/start_demo.ps1`. Public hosting is optional; the current presentation path runs locally. For the full examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md); for presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
 
 Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
 

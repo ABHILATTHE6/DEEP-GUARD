@@ -55,4 +55,4 @@ The model shows useful separation on this particular held-out Tiny-GenImage spli
 
 These scores describe only this dataset protocol and split. They are not proof of media provenance and do not establish performance on unseen generators, real-world photos, post-processing, compression, or cross-dataset samples. The dataset license and attribution terms must be respected; raw dataset images are not included in this repository.
 
-The machine-readable metrics are in [`image_evaluation.json`](image_evaluation.json). The dataset manifest will be published after the notebook's final report-publication cell completes.
+The machine-readable metrics are in [`image_evaluation.json`](image_evaluation.json), and the split protocol and counts are recorded in [`dataset_manifest.json`](dataset_manifest.json). The JSON report includes SHA-256 checksums for the published manifest and best checkpoint.

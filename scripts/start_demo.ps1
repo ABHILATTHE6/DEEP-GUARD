@@ -20,6 +20,12 @@ if (-not (Test-Path $viteCmd)) {
     exit 1
 }
 
+$servingCheck = & $pythonPath -c "import cv2, librosa, soundfile, torch, torchvision, transformers"
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Multimodal serving dependencies are missing. Run '.\\.venv\\Scripts\\python.exe -m pip install -e "".[serving,dev]""' from the repository root, then rerun this script."
+    exit 1
+}
+
 function ConvertTo-PowerShellLiteral([string]$Value) {
     return "'" + $Value.Replace("'", "''") + "'"
 }

@@ -6,7 +6,10 @@ from pathlib import Path
 
 import torch
 from PIL import Image
-from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
+from torchvision.models import efficientnet_b0
+
+from ml.image.config import ImageModelConfig
+from ml.image.dataset import build_transforms
 
 
 CLASSES = ["ai_generated", "real"]
@@ -46,6 +49,13 @@ def _verdict(
     return "uncertain", "fallback_mixed_model_signal"
 
 
+def preprocess_image(image: Image.Image) -> torch.Tensor:
+    """Apply the same deterministic preprocessing used for validation and test data."""
+    config = ImageModelConfig(pretrained=False)
+    transform = build_transforms(config, train=False)
+    return transform(image)
+
+
 def predict(path: Path, checkpoint_path: Path) -> dict:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
@@ -57,10 +67,10 @@ def predict(path: Path, checkpoint_path: Path) -> dict:
     model.to(device)
     model.eval()
 
-    weights = EfficientNet_B0_Weights.DEFAULT
     with Image.open(path) as opened:
         image = opened.convert("RGB")
-    tensor = weights.transforms()(image).unsqueeze(0).to(device)
+    # Keep runtime inference identical to the train/validation/test resize+normalize pipeline.
+    tensor = preprocess_image(image).unsqueeze(0).to(device)
 
     with torch.inference_mode():
         logits = model(tensor)

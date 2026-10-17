@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Sequence
 
 import torch
 from PIL import Image
@@ -56,53 +57,69 @@ def preprocess_image(image: Image.Image) -> torch.Tensor:
     return transform(image)
 
 
-def predict(path: Path, checkpoint_path: Path) -> dict:
+def predict_images(images: Sequence[Image.Image], checkpoint_path: Path) -> list[dict]:
+    """Batch-infer one or more PIL images while loading the checkpoint only once.
+
+    This is used by the video frame sampler to avoid reloading the 46 MB checkpoint
+    separately for every frame.
+    """
+    if not images:
+        return []
+    if not checkpoint_path.is_file():
+        raise FileNotFoundError(f"Image checkpoint not found: {checkpoint_path}")
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=True)
     state = checkpoint.get("model_state_dict", checkpoint)
-    classes = checkpoint.get("classes", CLASSES)
+    classes = list(checkpoint.get("classes", CLASSES))
+    if set(classes) != {"ai_generated", "real"}:
+        raise ValueError(f"Unsupported checkpoint class mapping: {classes}")
 
     model = _build_model(len(classes))
     model.load_state_dict(state)
     model.to(device)
     model.eval()
 
-    with Image.open(path) as opened:
-        image = opened.convert("RGB")
-    # Keep runtime inference identical to the train/validation/test resize+normalize pipeline.
-    tensor = preprocess_image(image).unsqueeze(0).to(device)
-
+    tensors = torch.stack([preprocess_image(image.convert("RGB")) for image in images]).to(device)
     with torch.inference_mode():
-        logits = model(tensor)
-        probabilities = torch.softmax(logits, dim=1)[0]
+        logits = model(tensors)
+        probabilities = torch.softmax(logits, dim=1).cpu()
 
     ai_index = classes.index("ai_generated")
     real_index = classes.index("real")
-    ai_score = float(probabilities[ai_index].item())
-    real_score = float(probabilities[real_index].item())
-    predicted_index = int(torch.argmax(probabilities).item())
-    raw_label = classes[predicted_index]
-
     threshold = checkpoint.get("real_probability_threshold")
     if threshold is not None:
         threshold = float(threshold)
-    verdict, signal = _verdict(ai_score, real_score, threshold)
 
-    return {
-        "label": raw_label,
-        "verdict": verdict,
-        "confidence": max(ai_score, real_score),
-        "ai_probability": ai_score,
-        "real_probability": real_score,
-        "ai_score": ai_score,
-        "real_score": real_score,
-        "decision_threshold": threshold,
-        "signal": signal,
-        "model": checkpoint.get("model_name", "deepguard-image-efficientnet-b0"),
-        "classes": classes,
-        "calibrated": threshold is not None,
-        "note": (
-            "Threshold was selected using validation data only; model scores are not proof "
-            "of image provenance. Borderline scores are reported as uncertain."
-        ),
-    }
+    results: list[dict] = []
+    for row in probabilities:
+        ai_score = float(row[ai_index].item())
+        real_score = float(row[real_index].item())
+        predicted_index = int(torch.argmax(row).item())
+        verdict, signal = _verdict(ai_score, real_score, threshold)
+        results.append({
+            "label": classes[predicted_index],
+            "verdict": verdict,
+            "confidence": max(ai_score, real_score),
+            "ai_probability": ai_score,
+            "real_probability": real_score,
+            "ai_score": ai_score,
+            "real_score": real_score,
+            "decision_threshold": threshold,
+            "signal": signal,
+            "model": checkpoint.get("model_name", "deepguard-image-efficientnet-b0"),
+            "classes": classes,
+            "calibrated": threshold is not None,
+            "note": (
+                "Threshold was selected using validation data only; model scores are not proof "
+                "of image provenance. Borderline scores are reported as uncertain."
+            ),
+        })
+    return results
+
+
+def predict(path: Path, checkpoint_path: Path) -> dict:
+    """Infer a single image, preserving the existing image API contract."""
+    with Image.open(path) as opened:
+        image = opened.convert("RGB")
+    return predict_images([image], checkpoint_path)[0]

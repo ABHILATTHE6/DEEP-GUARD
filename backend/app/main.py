@@ -1,7 +1,7 @@
 """DEEP-Guard FastAPI inference service.
 
-The API supports image inference, experimental sampled-frame video screening, and a pretrained speech anti-spoofing baseline.
-Each modality carries explicit limits in its result; video/audio are not DEEP-GUARD-trained or locally benchmarked models.
+The API supports image inference, experimental sampled-frame video screening, and an external pretrained speech anti-spoofing baseline.
+Each modality carries explicit limits in its result; video/audio are not DEEP-GUARD-trained or independently benchmarked models.
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def models() -> dict:
     return {
         "image": {"name": "deepguard-image-v1", "status": "ready_if_checkpoint_configured"},
         "video": {"name": "deepguard-image-efficientnet-b0-frame-aggregate", "status": "experimental_frame_based"},
-        "audio": {"name": "SpeechAntiSpoofingBenchmarks/Wav2Vec2-Small-AntiDeepfake", "status": "experimental_pretrained", "license": "CC-BY-NC-SA-4.0"},
+        "audio": {"name": "garystafford/wav2vec2-deepfake-voice-detector", "status": "experimental_pretrained", "license": "Apache-2.0", "download_on_first_use": True},
         "fusion": {"name": "deepguard-fusion-v1", "status": "planned_not_validated"},
     }
 

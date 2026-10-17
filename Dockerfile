@@ -21,11 +21,14 @@ COPY pyproject.toml ./
 COPY backend/ ./backend/
 COPY ml/ ./ml/
 
-RUN python -m pip install --upgrade pip \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ffmpeg libsndfile1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m pip install --upgrade pip \
     && python -m pip install -e . \
-    && python -m pip install "pillow>=10,<12" \
     && python -m pip install --index-url https://download.pytorch.org/whl/cpu \
-       torch==2.5.1+cpu torchvision==0.20.1+cpu
+       torch==2.5.1+cpu torchvision==0.20.1+cpu \
+    && python -m pip install "transformers>=4.45,<6" "opencv-python-headless>=4.10,<5" "librosa>=0.10,<1" "soundfile>=0.12,<1" "pillow>=10,<12"
 
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 

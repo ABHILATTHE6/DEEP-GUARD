@@ -114,7 +114,7 @@ A: The classifier can fail on individual samples and on images that differ from 
 A: Validation is used for model selection and threshold calibration. The held-out test split provides a less biased final evaluation because it is not used to tune that threshold.
 
 **Q: Are video and audio detection complete?**  
-A: No. Their paths are experimental/untrained, and end-to-end multimodal fusion is not yet validated. The operational demonstration should focus on image analysis.
+A: They are functional experimental paths, not fully validated detectors. Video averages sampled-frame scores from the image model and cannot detect temporal manipulation. Audio uses an external pretrained English speech classifier whose weights are downloaded on first use. DEEP-GUARD has not measured dedicated held-out video/audio benchmarks, and multimodal fusion is not yet validated.
 
 **Q: What makes the project reproducible?**  
 A: The repository publishes training/evaluation scripts, a notebook, checkpoint release reference, dataset manifest, checksums, and a machine-readable and human-readable evaluation report. A full clean-runtime reproduction is still a remaining verification task.

@@ -19,6 +19,17 @@ type Result = {
 
 type HistoryItem = Result & { id: string; time: string };
 
+type MediaKind = 'image' | 'video' | 'audio';
+
+function getMediaKind(file: File): MediaKind | null {
+  const mime = file.type.toLowerCase();
+  const name = file.name.toLowerCase();
+  if (mime.startsWith('image/') || /\.(png|jpe?g|jfif|webp|bmp)$/.test(name)) return 'image';
+  if (mime.startsWith('video/') || /\.(mp4|webm|mov|mkv|avi)$/.test(name)) return 'video';
+  if (mime.startsWith('audio/') || /\.(wav|mp3|flac|ogg|m4a|aac|opus)$/.test(name)) return 'audio';
+  return null;
+}
+
 const API = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '');
 const HISTORY_KEY = 'deepguard-history';
 
@@ -58,8 +69,9 @@ function App() {
 
   function selectFile(next: File | undefined) {
     if (!next) return;
-    if (!next.type.startsWith('image/')) {
-      setResult({ error: 'Please select an image file.' });
+    const kind = getMediaKind(next);
+    if (!kind) {
+      setResult({ error: 'Choose a supported image, video, or audio file.' });
       return;
     }
     if (preview) URL.revokeObjectURL(preview);
@@ -114,11 +126,15 @@ function App() {
 
         <section className="hero-grid">
           <div className="card upload-card" id="image-analysis">
-            <div className="section-head"><div><span className="label">IMAGE ANALYSIS</span><h2>Upload media</h2><p>Drop an image here or choose a file from your device.</p></div><span className="step">01</span></div>
+            <div className="section-head"><div><span className="label">IMAGE ANALYSIS</span><h2>Upload media</h2><p>Drop an image, video, or audio clip here, or choose a file.</p></div><span className="step">01</span></div>
             <label className={`dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); selectFile(e.dataTransfer.files[0]); }}>
-              {preview ? <img className="preview" src={preview} alt="Selected media preview" /> : <div className="drop-content"><div className="upload-icon">↑</div><strong>Drag & drop an image</strong><span>or click to browse</span><small>JPG, PNG, WEBP</small></div>}
-              <input type="file" accept="image/*" onChange={e => selectFile(e.target.files?.[0])} />
+              {preview && file && getMediaKind(file) === 'video' ? <video className="preview" src={preview} muted autoPlay loop playsInline /> :
+                preview && file && getMediaKind(file) === 'audio' ? <div className="audio-preview"><div className="upload-icon">♫</div><strong>Audio clip selected</strong><span>{file.name}</span><small>Listen to the sample below the upload area.</small></div> :
+                preview ? <img className="preview" src={preview} alt="Selected image preview" /> :
+                <div className="drop-content"><div className="upload-icon">↑</div><strong>Drag & drop media</strong><span>or click to browse</span><small>Images · MP4/WEBM · WAV/MP3/FLAC</small></div>}
+              <input type="file" accept="image/*,video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-msvideo,audio/*" onChange={e => selectFile(e.target.files?.[0])} />
             </label>
+            {file && getMediaKind(file) === 'audio' && preview && <audio className="audio-player" src={preview} controls preload="metadata" />}
             {file && <div className="file-row"><span>{file.name}</span><button onClick={reset}>Remove</button></div>}
             <button className="primary" disabled={!file || busy || !apiOnline} onClick={analyze}>{busy ? 'Analyzing…' : 'Run detection'}</button>
           </div>
@@ -149,11 +165,11 @@ function App() {
             </article>
             <article className="model-status-item">
               <div className="model-status-heading"><strong>Video</strong><span className="status-chip experimental">EXPERIMENTAL</span></div>
-              <p>The API does not claim a video detection result. Trained video weights and held-out evaluation are still pending.</p>
+              <p>Experimental screening averages scores from up to eight sampled frames using the image model. Temporal artifacts and audio/video sync are not analyzed, and video performance is not independently benchmarked.</p>
             </article>
             <article className="model-status-item">
               <div className="model-status-heading"><strong>Audio</strong><span className="status-chip experimental">EXPERIMENTAL</span></div>
-              <p>The audio feature path is a prototype. The audio classifier has not been trained and evaluated.</p>
+              <p>Uses an external pretrained Wav2Vec2 speech detector. First use downloads about 1.26 GB of weights. English-focused baseline; not independently benchmarked by DEEP-GUARD.</p>
             </article>
             <article className="model-status-item">
               <div className="model-status-heading"><strong>Multimodal fusion</strong><span className="status-chip planned">PLANNED</span></div>

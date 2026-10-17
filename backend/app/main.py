@@ -1,8 +1,7 @@
 """DEEP-Guard FastAPI inference service.
 
-The API exposes a stable contract for image, video, audio and multimodal analysis.
-Image inference uses the trained EfficientNet pipeline when a checkpoint is supplied;
-video/audio adapters return an explicit unavailable status until their models are trained.
+The API supports image inference, experimental sampled-frame video screening, and a pretrained speech anti-spoofing baseline.
+Each modality carries explicit limits in its result; video/audio are not DEEP-GUARD-trained or locally benchmarked models.
 """
 from __future__ import annotations
 
@@ -14,10 +13,9 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import UnidentifiedImageError
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.services.analyzer import UnsupportedMediaTypeError, analyze_file
+from backend.app.services.analyzer import InvalidMediaFileError, UnsupportedMediaTypeError, analyze_file
 
 app = FastAPI(title="DEEP-Guard API", version="0.2.0")
 app.add_middleware(
@@ -44,9 +42,9 @@ def health() -> dict[str, str]:
 def models() -> dict:
     return {
         "image": {"name": "deepguard-image-v1", "status": "ready_if_checkpoint_configured"},
-        "video": {"name": "deepguard-video-v1", "status": "experimental"},
-        "audio": {"name": "deepguard-audio-v1", "status": "experimental"},
-        "fusion": {"name": "deepguard-fusion-v1", "status": "score_fusion_contract"},
+        "video": {"name": "deepguard-image-efficientnet-b0-frame-aggregate", "status": "experimental_frame_based"},
+        "audio": {"name": "SpeechAntiSpoofingBenchmarks/Wav2Vec2-Small-AntiDeepfake", "status": "experimental_pretrained", "license": "CC-BY-NC-SA-4.0"},
+        "fusion": {"name": "deepguard-fusion-v1", "status": "planned_not_validated"},
     }
 
 
@@ -67,10 +65,17 @@ async def analyze(media: UploadFile = File(...)) -> dict:
             result = analyze_file(path, media.content_type or "application/octet-stream")
         except UnsupportedMediaTypeError as exc:
             raise HTTPException(status_code=415, detail=str(exc)) from exc
-        except (UnidentifiedImageError, OSError) as exc:
+        except InvalidMediaFileError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except RuntimeError as exc:
+            raise HTTPException(
+                status_code=503,
+                detail="A media-analysis dependency or model is unavailable. Check the ML dependencies and retry.",
+            ) from exc
+        except OSError as exc:
             raise HTTPException(
                 status_code=400,
-                detail="The uploaded image is not a valid, readable image file.",
+                detail="The uploaded media file is not valid or could not be read.",
             ) from exc
         result["media_id"] = _media_id(data)
         result["filename"] = media.filename or "upload"

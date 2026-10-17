@@ -1,0 +1,31 @@
+{
+  "dataset": "TheKernel01/Tiny-GenImage",
+  "created_utc": "2026-10-17T08:48:03.749960+00:00",
+  "protocol": "tiny_genimage_train_source_split; source validation divided into disjoint val and test samples",
+  "source_label_map": {
+    "0": "real",
+    "1": "ai_generated"
+  },
+  "output_class_order_imagefolder": [
+    "ai_generated",
+    "real"
+  ],
+  "seed": 42,
+  "train_per_class": {
+    "real": 3000,
+    "ai_generated": 3000
+  },
+  "val_per_class": {
+    "real": 400,
+    "ai_generated": 400
+  },
+  "test_per_class": {
+    "real": 400,
+    "ai_generated": 400
+  },
+  "notes": [
+    "This is a reproducible Tiny-GenImage baseline, not the earlier mixed COCO/Nature V3 dataset.",
+    "Do not redistribute source images unless the source license permits it.",
+    "Test is held out from model fitting and threshold calibration."
+  ]
+}

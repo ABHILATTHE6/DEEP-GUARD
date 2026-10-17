@@ -26,6 +26,16 @@ ml = [
   "librosa>=0.10,<1",
   "pillow>=10,<12",
   "datasets>=3,<5",
+  "soundfile>=0.12,<1",
+]
+serving = [
+  "torch>=2.4,<3",
+  "torchvision>=0.19,<1",
+  "transformers>=4.45,<6",
+  "opencv-python>=4.10,<5",
+  "librosa>=0.10,<1",
+  "pillow>=10,<12",
+  "soundfile>=0.12,<1",
 ]
 dev = [
   "pytest>=8,<9",

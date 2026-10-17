@@ -55,9 +55,9 @@ The API intentionally returns **UNCERTAIN/experimental** for video and audio unt
 
 Keep raw datasets outside Git. Register each dataset with its source, license, class definitions, generator/source information, and version. Create independent train/validation/test splits and prevent near-duplicate leakage.
 
-### 2. Improve the image baseline (future work)
+### 2. Improve the image baseline (Phase 2)
 
-The current five-epoch Tiny-GenImage baseline, best checkpoint, dataset manifest, and held-out evaluation are already published. Keep this baseline intact for the current demonstration. When improving it later, train with more diverse data and evaluate a new checkpoint on a separate held-out set before replacing or comparing scores.
+The current five-epoch Tiny-GenImage baseline, best checkpoint, dataset manifest, and held-out evaluation are already published. Keep this baseline intact. The new [OpenFake generalization experiment](notebooks/DEEP_GUARD_OpenFake_Experiment.ipynb) trains a separate candidate with a broader generator distribution and compares both models on the same held-out OOD and in-the-wild test samples. It does not overwrite the existing checkpoint or publish new weights automatically. Review the dataset's non-commercial and generator-specific license terms before use or redistribution; see [Phase 2 experiment instructions](docs/OPENFAKE_EXPERIMENT.md).
 
 ### 3. Video and audio are experimental
 

@@ -62,7 +62,7 @@ The current five-epoch Tiny-GenImage baseline, best checkpoint, dataset manifest
 
 ### 3. Video and audio are experimental
 
-The API currently reports video and audio as uncertain/experimental rather than presenting an unverified detection result. Frame analysis and audio feature extraction can be developed from the existing prototypes, but modality-specific training data, model checkpoints, integration, and held-out evaluation remain necessary before claiming video/audio detection is operational.
+Video requests currently use up to eight sampled frames scored by the existing image model; this is a frame-aggregation prototype, not a temporal video detector. Audio requests use an external pretrained Wav2Vec2 classifier (English-focused, ~1.26 GB weights downloaded on first use). These paths are integrated into the dashboard/API but have not been independently benchmarked by DEEP-GUARD. Dedicated training or validation datasets and held-out evaluations are required before presenting them as validated detectors.
 
 ### 4. Train the audio model
 
@@ -78,7 +78,7 @@ Test JPEG compression, resizing, blur, noise, screenshots, transcoding, and at l
 
 ### 7. Final examiner demonstration
 
-Use the current dashboard to upload and analyze an image, show the model scores and evidence, and open the model-availability panel. The current dashboard accepts images only. Video/audio detection remains experimental/untrained, multimodal fusion is not end-to-end validated, and Grad-CAM is not enabled in the current inference response. Use measured results only.
+Use the current dashboard to upload an image, video, or speech-audio clip; show the returned scores/evidence and model-availability panel. Image is the trained project baseline; video is sampled-frame screening; audio uses an external pretrained English speech model; multimodal fusion is not end-to-end validated, and Grad-CAM is not enabled in the current inference response. Use measured results only.
 
 ## Local run
 

@@ -49,6 +49,7 @@ function App() {
     if (!result?.verdict) return 'Awaiting analysis';
     if (result.verdict === 'likely_real') return 'Likely Real';
     if (result.verdict === 'likely_ai_generated' || result.verdict === 'ai_generated') return 'Likely AI Generated';
+    if (result.verdict === 'uncertain') return 'Uncertain';
     return result.verdict.replaceAll('_', ' ');
   }, [result]);
 
@@ -101,18 +102,18 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand"><div className="brand-mark">DG</div><div><strong>DEEP-Guard</strong><small>Media Forensics</small></div></div>
-        <nav><a className="active">Overview</a><a>Image analysis</a><a>Models</a><a>Evidence</a></nav>
+        <nav><a className="active" href="#overview">Overview</a><a href="#image-analysis">Image analysis</a><a href="#models">Models</a><a href="#evidence">Evidence</a></nav>
         <div className="sidebar-note">Authenticity assessment, not absolute proof.</div>
       </aside>
 
-      <main className="content">
+      <main className="content" id="overview">
         <header className="topbar">
           <div><span className="eyebrow">AI FORENSICS CONSOLE</span><h1>Detection workspace</h1><p>Inspect an image and review a clear, explainable model assessment.</p></div>
           <div className={`api-pill ${apiOnline ? 'online' : ''}`}><span /> {apiOnline ? 'API connected' : 'API offline'}<small>{API.replace('http://', '')}</small></div>
         </header>
 
         <section className="hero-grid">
-          <div className="card upload-card">
+          <div className="card upload-card" id="image-analysis">
             <div className="section-head"><div><span className="label">IMAGE ANALYSIS</span><h2>Upload media</h2><p>Drop an image here or choose a file from your device.</p></div><span className="step">01</span></div>
             <label className={`dropzone ${dragging ? 'dragging' : ''}`} onDragOver={e => { e.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); selectFile(e.dataTransfer.files[0]); }}>
               {preview ? <img className="preview" src={preview} alt="Selected media preview" /> : <div className="drop-content"><div className="upload-icon">↑</div><strong>Drag & drop an image</strong><span>or click to browse</span><small>JPG, PNG, WEBP</small></div>}
@@ -122,7 +123,7 @@ function App() {
             <button className="primary" disabled={!file || busy || !apiOnline} onClick={analyze}>{busy ? 'Analyzing…' : 'Run detection'}</button>
           </div>
 
-          <div className={`card result-card ${result && !result.error ? verdictClass : ''}`}>
+          <div id="evidence" className={`card result-card ${result && !result.error ? verdictClass : ''}`}>
             <div className="section-head"><div><span className="label">ASSESSMENT</span><h2>Forensic result</h2><p>Values below come directly from the DEEP-Guard API.</p></div><span className="step">02</span></div>
             {!result ? <div className="result-empty"><div className="scan-icon">◈</div><strong>Ready for inspection</strong><span>Upload an image to generate a model assessment.</span></div> : result.error ? <div className="error-box">{result.error}</div> : <div className="result-body">
               <div className="verdict-row"><div><span className="result-label">VERDICT</span><div className="verdict">{label}</div></div><div className="confidence"><strong>{confidence == null ? '—' : `${confidence}%`}</strong><span>top class score</span></div></div>
@@ -135,6 +136,29 @@ function App() {
               </div>}
               <div className="evidence"><span className="result-label">EVIDENCE RETURNED BY API</span><ul>{(result.evidence || []).map((x, i) => <li key={i}>{x}</li>)}</ul></div>
             </div>}
+          </div>
+        </section>
+
+        <section className="card model-status-card" id="models">
+          <div className="section-head"><div><span className="label">MODEL REGISTRY</span><h2>Model availability</h2><p>Current implementation status for the project demonstration.</p></div><span className="step">03</span></div>
+          <div className="model-status-grid">
+            <article className="model-status-item">
+              <div className="model-status-heading"><strong>Image</strong><span className="status-chip ready">READY</span></div>
+              <p>Trained EfficientNet-B0 is connected to the upload and inference API. Predictions can still be wrong on individual images.</p>
+              <a href="https://github.com/ABHILATTHE6/DEEP-GUARD/blob/main/reports/image_evaluation_tiny_genimage.md" target="_blank" rel="noreferrer">View measured benchmark ↗</a>
+            </article>
+            <article className="model-status-item">
+              <div className="model-status-heading"><strong>Video</strong><span className="status-chip experimental">EXPERIMENTAL</span></div>
+              <p>The API does not claim a video detection result. Trained video weights and held-out evaluation are still pending.</p>
+            </article>
+            <article className="model-status-item">
+              <div className="model-status-heading"><strong>Audio</strong><span className="status-chip experimental">EXPERIMENTAL</span></div>
+              <p>The audio feature path is a prototype. The audio classifier has not been trained and evaluated.</p>
+            </article>
+            <article className="model-status-item">
+              <div className="model-status-heading"><strong>Multimodal fusion</strong><span className="status-chip planned">PLANNED</span></div>
+              <p>The fusion contract is present, but end-to-end multimodal performance has not been validated.</p>
+            </article>
           </div>
         </section>
 
@@ -157,7 +181,7 @@ function App() {
 
         <section className="card history-card">
           <div className="section-head"><div><span className="label">HISTORY</span><h2>Recent analyses</h2></div><button className="ghost" onClick={() => { setHistory([]); localStorage.removeItem(HISTORY_KEY); }}>Clear</button></div>
-          {history.length === 0 ? <p className="muted">Your recent results will appear here after an analysis.</p> : <div className="history-list">{history.map(item => <div className="history-item" key={item.id}><div className={`dot ${item.verdict === 'likely_real' ? 'real' : 'ai'}`} /><div><strong>{item.verdict === 'likely_real' ? 'Likely Real' : 'Likely AI Generated'}</strong><span>{item.filename || 'Image'} · {item.time}</span></div><b>{item.confidence == null ? '—' : `${(item.confidence * 100).toFixed(1)}%`}</b></div>)}</div>}
+          {history.length === 0 ? <p className="muted">Your recent results will appear here after an analysis.</p> : <div className="history-list">{history.map(item => <div className="history-item" key={item.id}><div className={`dot ${item.verdict === 'likely_real' ? 'real' : item.verdict === 'likely_ai_generated' || item.verdict === 'ai_generated' ? 'ai' : 'neutral'}`} /><div><strong>{item.verdict === 'likely_real' ? 'Likely Real' : item.verdict === 'likely_ai_generated' || item.verdict === 'ai_generated' ? 'Likely AI Generated' : 'Uncertain'}</strong><span>{item.filename || 'Image'} · {item.time}</span></div><b>{item.confidence == null ? '—' : `${(item.confidence * 100).toFixed(1)}%`}</b></div>)}</div>}
         </section>
 
         <footer>DEEP-Guard · Research prototype · Predictions are assessments, not definitive proof.</footer>

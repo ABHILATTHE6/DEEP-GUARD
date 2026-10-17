@@ -55,7 +55,7 @@ Do not push a dataset or checkpoint to ordinary Git just to make it persistent. 
 
 ## Current status
 
-This document is the target workflow, not evidence that every step has already been completed. A resumable image-training script and GitHub Release checkpoint-sync utility are now checked in and documented in [TRAINING.md](TRAINING.md), but the first end-to-end publish/download/resume cycle has not yet been verified. The repository still needs a clean-runtime dataset download/preparation path, a fully tested public GPU notebook/runner, and a published evaluation report for the final checkpoint. Previous training metrics must not be presented as final if their probability/label orientation or data split has not been verified.
+This document describes both the target workflow and the verified current baseline; it is not evidence that every reproducibility step is complete. The five-epoch Tiny-GenImage baseline has a public best checkpoint, published held-out evaluation report, JSON metrics, dataset manifest, and recorded SHA-256 hashes. The local Python test suite and frontend production build have passed, and the latest checked GitHub Actions run has passing Python and frontend jobs. The remaining reproducibility gaps are a fresh-runtime dataset rebuild and a fully verified end-to-end checkpoint upload/download/resume cycle. Keep the baseline results labeled as Tiny-GenImage and do not describe them as results from the earlier mixed V3 experiment.
 
 ## Acceptance checklist
 
@@ -67,7 +67,7 @@ This document is the target workflow, not evidence that every step has already b
 - [ ] Training can resume from a persistent checkpoint after a runtime restart.
 - [ ] Validation is used for checkpoint selection and threshold calibration; test set is held out.
 - [ ] Evaluation script produces metrics with verified class/probability orientation.
-- [ ] Published weights have version, checksum, matching config, and evaluation report.
-- [ ] GitHub Actions runs tests and frontend build on pull requests/pushes.
+- [x] Published weights have a checkpoint release, checksum, config metadata, and matching evaluation report.
+- [x] GitHub Actions runs Python checks and the frontend build; the latest checked run passed both jobs.
 - [ ] Public demo has a deployment URL and documents API hosting.
-- [ ] README distinguishes implemented, experimentally validated, and planned features.
+- [x] README distinguishes implemented, experimentally validated, and planned features.

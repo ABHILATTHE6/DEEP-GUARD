@@ -1,6 +1,6 @@
 # Public Demo Deployment (Google Cloud Run)
 
-This deploys the existing React/Vite dashboard and FastAPI image inference API together as one public URL. It uses the current published checkpoint; it does not retrain the model or alter the evaluation report.
+This deploys the existing React/Vite dashboard and FastAPI image, experimental video-frame, and external pretrained audio inference routes together as one public URL. It uses the current published checkpoint; it does not retrain the model or alter the evaluation report.
 
 ## Hosting and cost notes
 
@@ -32,7 +32,7 @@ gcloud run deploy deep-guard --source . --region asia-south1 --allow-unauthentic
 
 Replace `YOUR_GOOGLE_CLOUD_PROJECT_ID` with your actual project ID. Do not paste billing information, credentials, or access tokens into this repository.
 
-The first build can take several minutes because it builds the frontend, installs CPU-only PyTorch, and downloads the published checkpoint. The Dockerfile checks the checkpoint SHA-256 during the build and fails if the downloaded bytes don't match the currently published baseline.
+The first build can take several minutes because it builds the frontend, installs CPU-only PyTorch and audio/video dependencies, and downloads the published image checkpoint. The first audio analysis after deployment downloads approximately 1.26 GB of separate speech-model weights, which can add startup latency and storage/network use. The Dockerfile checks the checkpoint SHA-256 during the build and fails if the downloaded bytes don't match the currently published baseline.
 
 When deployment completes, copy the HTTPS service URL printed by `gcloud`.
 

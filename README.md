@@ -100,7 +100,7 @@ npm run dev
 
 Verify the backend at <http://127.0.0.1:8000/api/v1/health>. The React dashboard is served at the Vite URL printed by `npm run dev`, usually <http://localhost:5173>.
 
-To prepare a public one-URL demo, see [Cloud Run Deployment](docs/CLOUD_RUN_DEPLOYMENT.md). This requires Google Cloud billing setup; check current pricing and budget controls before deploying.
+For the local Windows demo, use the [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md), which launches the backend and dashboard without cloud setup. Public hosting is optional; if needed later, see [Cloud Run Deployment](docs/CLOUD_RUN_DEPLOYMENT.md), which requires Google Cloud billing setup.
 
 ## Evaluation
 

@@ -13,6 +13,10 @@ VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime", "video/x-matroska"}
 AUDIO_TYPES = {"audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/webm"}
 
 
+class UnsupportedMediaTypeError(ValueError):
+    """Raised when an uploaded file is not a supported image, video, or audio type."""
+
+
 def _image(path: str) -> dict:
     checkpoint = os.getenv("DEEP_GUARD_IMAGE_CHECKPOINT")
     if not checkpoint or not Path(checkpoint).exists():
@@ -120,4 +124,4 @@ def analyze_file(path: str, content_type: str) -> dict:
     guessed, _ = mimetypes.guess_type(path)
     if guessed and guessed.startswith("image/"):
         return _image(path)
-    raise ValueError(f"Unsupported media type: {content_type}")
+    raise UnsupportedMediaTypeError(f"Unsupported media type: {content_type}")

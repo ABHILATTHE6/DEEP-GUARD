@@ -1,20 +1,33 @@
 """Modality routing and evidence contract for DEEP-Guard."""
-
 from __future__ import annotations
 
 import mimetypes
 import os
 from pathlib import Path
 
+from PIL import UnidentifiedImageError
+
 from ml.image.inference import predict
+from ml.media.audio import analyze_audio
+from ml.media.video import analyze_video
 
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
-VIDEO_TYPES = {"video/mp4", "video/webm", "video/quicktime", "video/x-matroska"}
-AUDIO_TYPES = {"audio/wav", "audio/x-wav", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/webm"}
+VIDEO_TYPES = {
+    "video/mp4", "video/webm", "video/quicktime", "video/x-matroska",
+    "video/x-msvideo", "video/avi",
+}
+AUDIO_TYPES = {
+    "audio/wav", "audio/x-wav", "audio/flac", "audio/mpeg", "audio/mp4",
+    "audio/ogg", "audio/webm", "audio/x-m4a", "audio/m4a",
+}
 
 
 class UnsupportedMediaTypeError(ValueError):
     """Raised when an uploaded file is not a supported image, video, or audio type."""
+
+
+class InvalidMediaFileError(ValueError):
+    """Raised when an upload claims a supported media type but cannot be decoded."""
 
 
 def _image(path: str) -> dict:
@@ -28,7 +41,7 @@ def _image(path: str) -> dict:
             "model": "deepguard-image-v1",
             "evidence": ["No trained checkpoint configured for API inference."],
             "summary": (
-                "DEEP-Guard could not assess this image because the trained image checkpoint "
+                "DEEP-GUARD could not assess this image because the trained image checkpoint "
                 "is not configured."
             ),
         }
@@ -87,10 +100,7 @@ def _image(path: str) -> dict:
         "model": model,
         "evidence": evidence,
         "summary": summary,
-        "scores": {
-            "ai_generated": ai_probability,
-            "real": real_probability,
-        },
+        "scores": {"ai_generated": ai_probability, "real": real_probability},
         "decision_threshold": threshold,
         "explainability": {
             "available": False,
@@ -99,29 +109,59 @@ def _image(path: str) -> dict:
     }
 
 
-def _untrained(modality: str, model: str) -> dict:
-    return {
-        "modality": modality,
-        "verdict": "uncertain",
-        "confidence": None,
-        "status": "experimental_model_not_trained",
-        "model": model,
-        "evidence": [f"{modality.title()} model is not yet trained; no synthetic result is claimed."],
-        "summary": (
-            f"The {modality} pipeline is present, but its model has not yet been trained, "
-            "so DEEP-Guard is not making a detection claim."
-        ),
-    }
+def _video(path: str) -> dict:
+    checkpoint = os.getenv("DEEP_GUARD_IMAGE_CHECKPOINT")
+    if not checkpoint or not Path(checkpoint).is_file():
+        return {
+            "modality": "video",
+            "verdict": "uncertain",
+            "confidence": None,
+            "status": "model_not_configured",
+            "model": "deepguard-video-frame-baseline",
+            "evidence": ["No image checkpoint is configured for sampled-frame scoring."],
+            "summary": "Video screening requires the current DEEP-GUARD image checkpoint.",
+        }
+    try:
+        return analyze_video(Path(path), Path(checkpoint))
+    except ValueError as exc:
+        raise InvalidMediaFileError(str(exc)) from exc
+
+
+def _audio(path: str) -> dict:
+    try:
+        return analyze_audio(Path(path))
+    except ValueError as exc:
+        raise InvalidMediaFileError(str(exc)) from exc
+
+
+def _route_type(path: str, content_type: str) -> str:
+    mime = (content_type or "").lower().split(";", maxsplit=1)[0].strip()
+    if mime in IMAGE_TYPES or mime.startswith("image/"):
+        return "image"
+    if mime in VIDEO_TYPES or mime.startswith("video/"):
+        return "video"
+    if mime in AUDIO_TYPES or mime.startswith("audio/"):
+        return "audio"
+
+    guessed, _ = mimetypes.guess_type(path)
+    guessed = guessed or ""
+    if guessed.startswith("image/"):
+        return "image"
+    if guessed.startswith("video/"):
+        return "video"
+    if guessed.startswith("audio/"):
+        return "audio"
+    raise UnsupportedMediaTypeError(f"Unsupported media type: {content_type or guessed or 'unknown'}")
 
 
 def analyze_file(path: str, content_type: str) -> dict:
-    if content_type in IMAGE_TYPES or content_type.startswith("image/"):
-        return _image(path)
-    if content_type in VIDEO_TYPES or content_type.startswith("video/"):
-        return _untrained("video", "deepguard-video-v1")
-    if content_type in AUDIO_TYPES or content_type.startswith("audio/"):
-        return _untrained("audio", "deepguard-audio-v1")
-    guessed, _ = mimetypes.guess_type(path)
-    if guessed and guessed.startswith("image/"):
-        return _image(path)
-    raise UnsupportedMediaTypeError(f"Unsupported media type: {content_type}")
+    """Route a decoded file to image, video-frame, or speech inference."""
+    media_type = _route_type(path, content_type)
+    if media_type == "image":
+        try:
+            return _image(path)
+        except (UnidentifiedImageError, OSError) as exc:
+            raise InvalidMediaFileError("The uploaded image is not a valid, readable image file.") from exc
+    if media_type == "video":
+        return _video(path)
+    return _audio(path)

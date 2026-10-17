@@ -4,7 +4,7 @@ This is the simplest way to launch the working local DEEP-GUARD image demo. It d
 
 ## One-command startup
 
-First, make sure the saved checkpoint exists at `artifacts/image_training_best.pt`, Python dependencies are installed in `.venv`, and frontend dependencies are installed. If needed, run `npm ci` once from `frontend`.
+First, make sure the saved checkpoint exists at `artifacts/image_training_best.pt`, the Python virtual environment is installed, and frontend dependencies are installed. From the repository root, run `.\\.venv\\Scripts\\python.exe -m pip install -e ".[serving,dev]"` once to install the image/video/audio serving dependencies. If needed, run `npm ci` once from `frontend`.
 
 From the repository root in PowerShell:
 
@@ -19,6 +19,8 @@ The script verifies the local virtual environment, saved checkpoint, and fronten
 - API health: <http://127.0.0.1:8000/api/v1/health>
 
 Leave both service windows running. Stop each service with `Ctrl+C` in its corresponding window.
+
+The first audio analysis downloads about 1.26 GB of external pretrained model weights and requires an internet connection. Video analysis samples up to eight frames with the image model; it is experimental and does not inspect temporal artifacts.
 
 ## If startup does not work
 

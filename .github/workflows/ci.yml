@@ -95,6 +95,13 @@ jobs:
           assert {"ai_generated", "real"} <= set(result.get("scores", {})), result
           print("Container inference smoke test passed:", result.get("verdict"), result.get("model"))
           PY
+          printf 'not an actual image' > /tmp/deep-guard-invalid.png
+          invalid_status="$(curl --silent --output /tmp/deep-guard-invalid.json --write-out '%{http_code}' \
+            --form "media=@/tmp/deep-guard-invalid.png;type=image/png" \
+            http://127.0.0.1:8080/api/v1/analyze)"
+          test "$invalid_status" = "400"
+          grep -q "not a valid, readable image file" /tmp/deep-guard-invalid.json
+          echo "Invalid image upload returns HTTP 400 as expected."
       - name: Show container logs on failure
         if: failure()
         run: docker logs deep-guard-smoke || true

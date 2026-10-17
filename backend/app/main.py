@@ -14,9 +14,10 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from PIL import UnidentifiedImageError
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.services.analyzer import analyze_file
+from backend.app.services.analyzer import UnsupportedMediaTypeError, analyze_file
 
 app = FastAPI(title="DEEP-Guard API", version="0.2.0")
 app.add_middleware(
@@ -62,7 +63,15 @@ async def analyze(media: UploadFile = File(...)) -> dict:
         tmp.write(data)
         path = tmp.name
     try:
-        result = analyze_file(path, media.content_type or "application/octet-stream")
+        try:
+            result = analyze_file(path, media.content_type or "application/octet-stream")
+        except UnsupportedMediaTypeError as exc:
+            raise HTTPException(status_code=415, detail=str(exc)) from exc
+        except (UnidentifiedImageError, OSError) as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="The uploaded image is not a valid, readable image file.",
+            ) from exc
         result["media_id"] = _media_id(data)
         result["filename"] = media.filename or "upload"
         return result

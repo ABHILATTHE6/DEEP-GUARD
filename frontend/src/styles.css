@@ -10,3 +10,24 @@
 .explanation-card{margin-top:16px;padding:21px}.explanation-head{align-items:flex-start;margin-bottom:18px}.explain-badge{font-size:9px;letter-spacing:.12em;padding:7px 9px;border-radius:999px;border:1px solid #25505a;color:#6ee2dc;background:#0a252c}.explain-badge.ai-badge{border-color:#5b3642;color:#ff9baa;background:#27171e}.explanation-grid{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:10px}.explanation-main{grid-row:span 2;padding:17px;border:1px solid #244457;border-radius:12px;background:linear-gradient(145deg,#102b3a,#0b1b29)}.explanation-main h3{font-family:'Space Grotesk';font-size:19px;margin:0 0 10px}.explanation-main p{margin:0;color:#9eafc1;font-size:12px;line-height:1.75}.explain-block{padding:14px;border:1px solid #1b3044;border-radius:11px;background:#0b1724}.explain-block>span{font-size:8px;letter-spacing:.14em;color:#5f8298;font-weight:700}.explain-block p{margin:8px 0 0;color:#899bae;font-size:10px;line-height:1.7}.explain-block ul{margin:8px 0 0;padding-left:15px;color:#899bae;font-size:10px;line-height:1.7}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}.stat{padding:15px 17px}.stat span,.stat small{display:block;color:#64778d;font-size:9px}.stat strong{display:block;font-family:'Space Grotesk';font-size:18px;margin:4px 0;color:#d8e5f6}.history-card{padding:18px 20px}.history-card .section-head{align-items:center;margin-bottom:10px}.history-list{display:grid}.history-item{display:grid;grid-template-columns:8px 1fr auto;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #17283b}.history-item .dot{width:7px;height:7px;border-radius:50%;background:#ff7182}.history-item .dot.real{background:#4cdbad}.history-item strong{display:block;font-size:11px}.history-item span{display:block;color:#60738a;font-size:9px;margin-top:3px}.history-item>b{font-size:10px;color:#9cafc4}.muted{color:#63758b;font-size:10px;margin:0}.history-card .ghost{border:1px solid #22374b;border-radius:7px;padding:5px 8px}.history-card .ghost:hover{background:#102333}footer{text-align:center;color:#42566d;font-size:9px;margin-top:18px}
 @media(max-width:900px){.app-shell{grid-template-columns:1fr}.sidebar{position:static;height:auto;padding:12px 16px;border-right:0;border-bottom:1px solid #1a2b40}.brand{padding-bottom:10px}.sidebar nav,.sidebar-note{display:none}.content{padding:22px 16px 35px}.hero-grid{grid-template-columns:1fr}.upload-card,.result-card{min-height:auto}.explanation-grid{grid-template-columns:1fr 1fr}.explanation-main{grid-row:auto}.stats{grid-template-columns:1fr 1fr 1fr}}@media(max-width:560px){.topbar{display:block}.api-pill{display:inline-flex;margin-top:14px}.details{grid-template-columns:1fr}.stats{grid-template-columns:1fr}.verdict{font-size:25px}.explanation-grid{grid-template-columns:1fr}.score-head{align-items:flex-start;flex-direction:column}}
+
+
+html{scroll-behavior:smooth;scroll-padding-top:18px}
+[id]{scroll-margin-top:18px}
+.sidebar nav a{text-decoration:none;transition:background .15s ease,color .15s ease}
+.sidebar nav a:hover,.sidebar nav a:focus-visible{background:#102737;color:#dcecff;outline:none}
+.model-status-card{margin-top:16px;padding:20px}
+.model-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.model-status-item{min-width:0;padding:14px;border:1px solid #1b3044;border-radius:11px;background:#091521}
+.model-status-heading{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.model-status-heading>strong{font-family:'Space Grotesk';font-size:13px;color:#d5e2f2}
+.model-status-item p{margin:11px 0 13px;color:#8799ad;font-size:10px;line-height:1.7}
+.model-status-item a{color:#60d4d5;font-size:10px;text-decoration:none}
+.model-status-item a:hover{text-decoration:underline}
+.status-chip{flex-shrink:0;border:1px solid;border-radius:999px;padding:4px 6px;font-size:8px;letter-spacing:.08em;font-weight:700}
+.status-chip.ready{border-color:#285c52;color:#6fe0b8;background:#0c2825}
+.status-chip.experimental{border-color:#5b4c32;color:#f1ca83;background:#292116}
+.status-chip.planned{border-color:#34475f;color:#aabbd0;background:#172335}
+.history-item .dot.neutral{background:#8a9db3}
+@media(max-width:900px){.model-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sidebar nav{display:flex;flex-wrap:wrap;gap:4px;padding-top:6px}.sidebar nav a{padding:7px 9px}.sidebar-note{display:none}}
+@media(max-width:560px){.model-status-grid{grid-template-columns:1fr}}

@@ -73,7 +73,7 @@ Report: [human-readable evaluation](../reports/image_evaluation_tiny_genimage.md
 - The model can misclassify AI-generated images as real. In the published test split, 137 of 400 AI-generated images were classified as real at the calibrated threshold.
 - A very high top-class score is the model's output score, not a guarantee of correctness or a calibrated probability of real-world authenticity.
 - The benchmark is specific to this dataset and split; it does not establish performance on unseen generators, different domains, or transformed/compressed images.
-- The current dashboard upload flow accepts images. Video and audio are experimental/untrained, and multimodal fusion has not been validated end to end.
+- The dashboard accepts images, video, and audio. Image is the trained project baseline; video is experimental frame aggregation; audio is an external pretrained English speech classifier; multimodal fusion is not validated end to end.
 - Grad-CAM heatmaps are not enabled in the current inference response.
 - A fresh-runtime dataset rebuild and the full checkpoint upload/download/resume cycle still need independent verification.
 

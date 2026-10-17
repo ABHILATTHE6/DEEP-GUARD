@@ -125,7 +125,7 @@ function App() {
           <div className={`card result-card ${result && !result.error ? verdictClass : ''}`}>
             <div className="section-head"><div><span className="label">ASSESSMENT</span><h2>Forensic result</h2><p>Values below come directly from the DEEP-Guard API.</p></div><span className="step">02</span></div>
             {!result ? <div className="result-empty"><div className="scan-icon">◈</div><strong>Ready for inspection</strong><span>Upload an image to generate a model assessment.</span></div> : result.error ? <div className="error-box">{result.error}</div> : <div className="result-body">
-              <div className="verdict-row"><div><span className="result-label">VERDICT</span><div className="verdict">{label}</div></div><div className="confidence"><strong>{confidence == null ? '—' : `${confidence}%`}</strong><span>model confidence</span></div></div>
+              <div className="verdict-row"><div><span className="result-label">VERDICT</span><div className="verdict">{label}</div></div><div className="confidence"><strong>{confidence == null ? '—' : `${confidence}%`}</strong><span>top class score</span></div></div>
               <div className="meter"><span style={{ width: `${confidence ?? 0}%` }} /></div>
               <div className="details"><div><span>Status</span><strong>{result.status || '—'}</strong></div><div><span>Model</span><strong>{result.model || '—'}</strong></div><div><span>Modality</span><strong>{result.modality || '—'}</strong></div></div>
               {result.scores && <div className="score-breakdown">

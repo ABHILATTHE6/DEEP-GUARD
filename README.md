@@ -81,7 +81,7 @@ Use the current dashboard to upload and analyze an image, show the model scores 
 
 ## Local run
 
-For the full Windows/PowerShell walkthrough and examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md).
+For the full Windows/PowerShell walkthrough and examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md). For presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
 
 Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
 

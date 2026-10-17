@@ -82,7 +82,7 @@ Use the current dashboard to upload and analyze an image, show the model scores 
 
 ## Local run
 
-For quick local startup on Windows, see [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md) and `scripts/start_demo.ps1`. Public hosting is optional; the current presentation path runs locally. For the full examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md); for presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
+For quick local startup on Windows, see [Local Demo Quick Start](docs/LOCAL_DEMO_QUICKSTART.md) and `scripts/start_demo.ps1`. For modality behavior and the external audio model, see [Multimodal Demo Notes](docs/MULTIMODAL_PHASE.md). Public hosting is optional; the current presentation path runs locally. For the full examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md); for presentation talking points and viva preparation, see [Presentation and Viva Guide](docs/PRESENTATION_AND_VIVA.md).
 
 Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
 

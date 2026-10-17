@@ -12,6 +12,8 @@ import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.services.analyzer import analyze_file
@@ -66,3 +68,22 @@ async def analyze(media: UploadFile = File(...)) -> dict:
         return result
     finally:
         Path(path).unlink(missing_ok=True)
+
+
+# In container deployments, serve the production Vite bundle from the same origin
+# as the API. In local development the Vite dev server continues to serve the UI.
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+FRONTEND_INDEX = FRONTEND_DIST / "index.html"
+FRONTEND_ASSETS = FRONTEND_DIST / "assets"
+
+if FRONTEND_INDEX.is_file():
+    if FRONTEND_ASSETS.is_dir():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=str(FRONTEND_ASSETS)),
+            name="frontend-assets",
+        )
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index() -> FileResponse:
+        return FileResponse(FRONTEND_INDEX)

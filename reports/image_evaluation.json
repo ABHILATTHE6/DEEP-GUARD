@@ -1,25 +1,6 @@
 {
   "created_utc": "2026-10-17T09:23:53.898758+00:00",
-  "dataset": "TheKernel01/Tiny-GenImage",
-  "dataset_protocol": "Train from source train split; source validation split divided into disjoint validation and test subsets using seed 43. This is the 3,000-per-class quick baseline, not the earlier mixed COCO + Nature + Tiny-GenImage V3 experiment.",
-  "split_counts": {
-    "train": {
-      "ai_generated": 3000,
-      "real": 3000,
-      "total": 6000
-    },
-    "validation": {
-      "ai_generated": 400,
-      "real": 400,
-      "total": 800
-    },
-    "test": {
-      "ai_generated": 400,
-      "real": 400,
-      "total": 800
-    }
-  },
-  "checkpoint": "GitHub Release training-checkpoints / image-training-best.pt",
+  "checkpoint": "/content/DEEP-GUARD/artifacts/image_training_best.pt",
   "model_name": "deepguard-image-efficientnet-b0",
   "epoch": 5,
   "classes": [
@@ -58,5 +39,12 @@
       ]
     ]
   },
-  "limitation": "Scores estimate model behavior on these specific splits; they are not proof of provenance and do not guarantee performance on unseen generators or domains. The real-image false-positive rate on the held-out test split (4.0%) was higher than the validation target (3.0%); threshold calibration does not guarantee the same rate on unseen data."
+  "limitation": "Scores estimate model behavior on these specific splits; they are not proof of provenance and do not guarantee performance on unseen generators or domains.",
+  "dataset": "TheKernel01/Tiny-GenImage",
+  "dataset_protocol": "train source split; source validation divided into disjoint val/test samples",
+  "dataset_manifest_sha256": "083c0f270d540ec9b26b246da509fb8d89206b0e5cb8b818c6e1854138017687",
+  "checkpoint_sha256": "7f34d91a65b6215dcee4024cd2f65177d6687a23be0d59a10d67c1d4dab21e1b",
+  "checkpoint_asset": "image-training-best.pt",
+  "repository": "https://github.com/ABHILATTHE6/DEEP-GUARD",
+  "reproducibility_note": "Scores apply to this dataset protocol and should not be presented as the previous mixed V3 experiment."
 }

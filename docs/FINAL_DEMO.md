@@ -19,8 +19,8 @@ Prerequisites: Python virtual environment at `.venv`, Node.js/npm, and a downloa
 From the repository root in PowerShell:
 
 ```powershell
-$env:DEEP_GUARD_IMAGE_CHECKPOINT = (Resolve-Path ".\\artifacts\\image_training_best.pt").Path
-.\\.venv\\Scripts\\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+$env:DEEP_GUARD_IMAGE_CHECKPOINT = (Resolve-Path ".\artifacts\image_training_best.pt").Path
+.\.venv\Scripts\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Keep this terminal running. Confirm the service is healthy at <http://127.0.0.1:8000/api/v1/health>. The response should include `"status":"ok"`.
@@ -42,7 +42,7 @@ Open the local Vite URL printed in the terminal, usually <http://localhost:5173>
 From the repository root:
 
 ```powershell
-.\\.venv\\Scripts\\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest -q
 cd frontend
 npm ci
 npm run build

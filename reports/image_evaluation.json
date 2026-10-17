@@ -1,0 +1,62 @@
+{
+  "created_utc": "2026-10-17T09:23:53.898758+00:00",
+  "dataset": "TheKernel01/Tiny-GenImage",
+  "dataset_protocol": "Train from source train split; source validation split divided into disjoint validation and test subsets using seed 43. This is the 3,000-per-class quick baseline, not the earlier mixed COCO + Nature + Tiny-GenImage V3 experiment.",
+  "split_counts": {
+    "train": {
+      "ai_generated": 3000,
+      "real": 3000,
+      "total": 6000
+    },
+    "validation": {
+      "ai_generated": 400,
+      "real": 400,
+      "total": 800
+    },
+    "test": {
+      "ai_generated": 400,
+      "real": 400,
+      "total": 800
+    }
+  },
+  "checkpoint": "GitHub Release training-checkpoints / image-training-best.pt",
+  "model_name": "deepguard-image-efficientnet-b0",
+  "epoch": 5,
+  "classes": [
+    "ai_generated",
+    "real"
+  ],
+  "positive_class": "ai_generated",
+  "threshold_rule": "likely_real if P(real) >= threshold, otherwise likely_ai_generated",
+  "threshold_source": "validation split only",
+  "target_real_false_positive_rate": 0.03,
+  "real_probability_threshold": 0.09106805920600891,
+  "validation": {
+    "count": 800,
+    "ai_recall_at_threshold": 0.6475,
+    "real_false_positive_rate_at_threshold": 0.0275,
+    "roc_auc_ai_positive": 0.933375
+  },
+  "test": {
+    "count": 800,
+    "argmax_accuracy": 0.855,
+    "calibrated_accuracy": 0.80875,
+    "ai_precision": 0.942652329749104,
+    "ai_recall": 0.6575,
+    "ai_f1": 0.7746686303387335,
+    "real_recall": 0.96,
+    "real_false_positive_rate": 0.04,
+    "roc_auc_ai_positive": 0.9310625,
+    "confusion_matrix_real_ai": [
+      [
+        384,
+        16
+      ],
+      [
+        137,
+        263
+      ]
+    ]
+  },
+  "limitation": "Scores estimate model behavior on these specific splits; they are not proof of provenance and do not guarantee performance on unseen generators or domains. The real-image false-positive rate on the held-out test split (4.0%) was higher than the validation target (3.0%); threshold calibration does not guarantee the same rate on unseen data."
+}

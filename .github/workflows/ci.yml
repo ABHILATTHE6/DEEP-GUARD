@@ -95,7 +95,8 @@ jobs:
           assert {"ai_generated", "real"} <= set(result.get("scores", {})), result
           print("Container image inference smoke test passed:", result.get("verdict"), result.get("model"))
           PY
-          ffmpeg -hide_banner -loglevel error -f lavfi -i "color=c=blue:s=64x64:r=4:d=2" -an -c:v libx264 -pix_fmt yuv420p -y /tmp/deep-guard-smoke.mp4
+          docker exec deep-guard-smoke ffmpeg -hide_banner -loglevel error -f lavfi -i "color=c=blue:s=64x64:r=4:d=2" -an -c:v libx264 -pix_fmt yuv420p -y /tmp/deep-guard-smoke.mp4
+          docker cp deep-guard-smoke:/tmp/deep-guard-smoke.mp4 /tmp/deep-guard-smoke.mp4
           curl --fail --silent --show-error \
             --form "media=@/tmp/deep-guard-smoke.mp4;type=video/mp4" \
             http://127.0.0.1:8080/api/v1/analyze > /tmp/deep-guard-video.json
@@ -110,7 +111,7 @@ jobs:
           assert result.get("frames_sampled", 0) > 0, result
           print("Container video-frame smoke test passed:", result.get("verdict"), result.get("frames_sampled"))
           PY
-          python - <<'PY'
+          cat > /tmp/deep-guard-audio-smoke.py <<'PY'
           from pathlib import Path
           from types import SimpleNamespace
 
@@ -141,6 +142,8 @@ jobs:
           assert result["scores"]["ai_generated"] > result["scores"]["real"], result
           print("Container audio preprocessing/model-contract smoke test passed.")
           PY
+          docker cp /tmp/deep-guard-audio-smoke.py deep-guard-smoke:/tmp/deep-guard-audio-smoke.py
+          docker exec deep-guard-smoke python /tmp/deep-guard-audio-smoke.py
           printf 'not an actual image' > /tmp/deep-guard-invalid.png
           invalid_status="$(curl --silent --output /tmp/deep-guard-invalid.json --write-out '%{http_code}' \
             --form "media=@/tmp/deep-guard-invalid.png;type=image/png" \

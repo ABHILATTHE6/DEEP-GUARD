@@ -131,3 +131,6 @@ The fallback dataset protocol is described in [docs/TRAINING.md](docs/TRAINING.m
 
 See [reports/README.md](reports/README.md) for the state of final evaluation artifacts.
 
+## Latest measured image baseline
+
+The held-out Tiny-GenImage baseline evaluation is now published: [human-readable report](reports/image_evaluation_tiny_genimage.md) and [machine-readable JSON](reports/image_evaluation.json). These results are for the 3,000-per-class quick baseline only, not the earlier mixed V3 data protocol. A full clean-runtime reproduction and final manifest/checksum publication still need verification.

@@ -1,7 +1,9 @@
-"""Audio deepfake screening using a pretrained speech anti-spoofing model.
+"""Audio deepfake screening using an external pretrained Wav2Vec2 classifier.
 
-The downloaded upstream weights are CC-BY-NC-SA 4.0. They are fetched lazily
-from Hugging Face and are not included in this repository or Docker image.
+The upstream checkpoint is Apache-2.0 licensed, but it is English-focused and
+was fine-tuned on a small task-specific dataset. DEEP-GUARD has not independently
+benchmarked this model. It downloads model weights on first use and is optional
+for image/video-only runs.
 """
 from __future__ import annotations
 
@@ -9,8 +11,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-MODEL_ID = "SpeechAntiSpoofingBenchmarks/Wav2Vec2-Small-AntiDeepfake"
-MODEL_REVISION = "85f8e14"  # pinned Hugging Face model revision
+MODEL_ID = "garystafford/wav2vec2-deepfake-voice-detector"
+MODEL_REVISION = "c5bffec702b5fc18b7b7523f1891036de198643a"
 SAMPLE_RATE = 16000
 MAX_ANALYZED_SECONDS = 30.0
 MIN_ANALYZED_SECONDS = 1.0
@@ -18,22 +20,14 @@ MIN_ANALYZED_SECONDS = 1.0
 
 @lru_cache(maxsize=1)
 def _load_detector() -> tuple[Any, Any, Any]:
-    """Load the audio processor and classifier only on the first audio request."""
+    """Load processor/model once per process; initial weights download is about 1.26 GB."""
     import torch
     from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
-    try:
-        processor = AutoFeatureExtractor.from_pretrained(
-            MODEL_ID,
-            revision=MODEL_REVISION,
-        )
-    except (OSError, ValueError):
-        # The upstream model is a Wav2Vec2 checkpoint; the base feature extractor
-        # provides its standard 16 kHz waveform normalization if no processor file exists.
-        from transformers import Wav2Vec2FeatureExtractor
-
-        processor = Wav2Vec2FeatureExtractor.from_pretrained("facebook/wav2vec2-base")
-
+    processor = AutoFeatureExtractor.from_pretrained(
+        MODEL_ID,
+        revision=MODEL_REVISION,
+    )
     model = AutoModelForAudioClassification.from_pretrained(
         MODEL_ID,
         revision=MODEL_REVISION,
@@ -46,7 +40,7 @@ def _load_detector() -> tuple[Any, Any, Any]:
 
 
 def _class_indices(model: Any) -> tuple[int, int]:
-    """Resolve fake/real indices from model labels; fallback follows upstream model card."""
+    """Resolve fake/real indices from model labels; model card fallback is real=0, fake=1."""
     id2label = getattr(model.config, "id2label", {}) or {}
     names = {int(index): str(label).lower() for index, label in id2label.items()}
     fake_terms = ("fake", "spoof", "synthetic", "deepfake", "generated")
@@ -55,12 +49,12 @@ def _class_indices(model: Any) -> tuple[int, int]:
     real = next((i for i, name in names.items() if any(term in name for term in real_terms)), None)
     if fake is not None and real is not None and fake != real:
         return fake, real
-    # The NII AntiDeepfake model card defines its binary scores as class 0=fake, 1=real.
-    return 0, 1
+    # Upstream model card documents output class 0 = real and class 1 = fake.
+    return 1, 0
 
 
 def analyze_audio(path: Path, model: Any | None = None) -> dict[str, Any]:
-    """Analyze a short speech clip; output remains experimental pending local evaluation."""
+    """Analyze a speech clip; this is an external baseline, not a DEEP-GUARD-trained model."""
     try:
         import librosa
         import numpy as np
@@ -68,7 +62,7 @@ def analyze_audio(path: Path, model: Any | None = None) -> dict[str, Any]:
     except ImportError as exc:
         raise RuntimeError(
             "Audio support requires librosa, soundfile, transformers and PyTorch. "
-            "Install the project ML dependencies and restart the API."
+            "Install the project serving dependencies and restart the API."
         ) from exc
 
     try:
@@ -95,54 +89,53 @@ def analyze_audio(path: Path, model: Any | None = None) -> dict[str, Any]:
             "explainability": {"available": False, "message": "Audio attribution plots are not available."},
         }
 
-    if model is None:
-        try:
+    try:
+        if model is None:
             processor, detector, device = _load_detector()
-        except Exception as exc:
-            # Do not silently substitute hand-crafted audio statistics for a detector.
-            return {
-                "modality": "audio",
-                "verdict": "uncertain",
-                "confidence": None,
-                "status": "model_unavailable",
-                "model": MODEL_ID,
-                "evidence": [
-                    "The pretrained audio model could not be loaded.",
-                    "An internet connection is needed on first use to download the pinned model weights.",
-                    "No authenticity verdict was fabricated.",
-                ],
-                "summary": (
-                    "DEEP-GUARD could not run the pretrained audio detector. "
-                    "Check internet access and the Python dependency installation, then retry."
-                ),
-                "explainability": {"available": False, "message": "Audio attribution plots are not available."},
-            }
-    else:
-        processor = None
-        detector = model
-        device = next(detector.parameters()).device
+        else:
+            processor = None
+            detector = model
+            device = next(detector.parameters()).device
 
-    waveform = np.asarray(waveform, dtype=np.float32)
-    duration = len(waveform) / SAMPLE_RATE
-    if duration > MAX_ANALYZED_SECONDS:
-        waveform = waveform[: int(MAX_ANALYZED_SECONDS * SAMPLE_RATE)]
-        duration = MAX_ANALYZED_SECONDS
+        waveform = np.asarray(waveform, dtype=np.float32)
+        duration = min(len(waveform) / SAMPLE_RATE, MAX_ANALYZED_SECONDS)
+        if len(waveform) > int(MAX_ANALYZED_SECONDS * SAMPLE_RATE):
+            waveform = waveform[: int(MAX_ANALYZED_SECONDS * SAMPLE_RATE)]
 
-    if processor is None:
-        # Test-only model injection path.
-        inputs = {"input_values": torch.from_numpy(waveform).unsqueeze(0).to(device)}
-    else:
-        inputs = processor(
-            waveform,
-            sampling_rate=SAMPLE_RATE,
-            return_tensors="pt",
-            padding=True,
-        )
-        inputs = {key: value.to(device) for key, value in inputs.items()}
+        if processor is None:
+            # Test-only model injection path.
+            inputs = {"input_values": torch.from_numpy(waveform).unsqueeze(0).to(device)}
+        else:
+            inputs = processor(
+                waveform,
+                sampling_rate=SAMPLE_RATE,
+                return_tensors="pt",
+                padding=True,
+            )
+            inputs = {key: value.to(device) for key, value in inputs.items()}
 
-    with torch.inference_mode():
-        logits = detector(**inputs).logits
-        probabilities = torch.softmax(logits, dim=-1)[0].detach().cpu().numpy()
+        with torch.inference_mode():
+            logits = detector(**inputs).logits
+            probabilities = torch.softmax(logits, dim=-1)[0].detach().cpu().numpy()
+    except Exception as exc:
+        return {
+            "modality": "audio",
+            "verdict": "uncertain",
+            "confidence": None,
+            "status": "model_unavailable",
+            "model": MODEL_ID,
+            "evidence": [
+                "The pretrained speech model could not be loaded or run.",
+                "The first use requires an internet connection to download roughly 1.26 GB of weights.",
+                "No authenticity verdict was fabricated.",
+                f"Diagnostic: {type(exc).__name__}: {str(exc)[:240]}",
+            ],
+            "summary": (
+                "DEEP-GUARD could not run the pretrained audio detector. Check internet access "
+                "and Python dependencies, then retry. Image and video-frame analysis are independent."
+            ),
+            "explainability": {"available": False, "message": "Audio attribution plots are not available."},
+        }
 
     fake_index, real_index = _class_indices(detector)
     if len(probabilities) < 2 or max(fake_index, real_index) >= len(probabilities):
@@ -155,24 +148,29 @@ def analyze_audio(path: Path, model: Any | None = None) -> dict[str, Any]:
     )
 
     evidence = [
-        f"Pretrained Wav2Vec2 anti-spoofing model: {MODEL_ID}.",
+        f"External pretrained Wav2Vec2 speech detector: {MODEL_ID}.",
         f"AI-generated / spoof speech score: {fake_probability * 100:.1f}%.",
         f"Human / bona-fide speech score: {real_probability * 100:.1f}%.",
         f"Analyzed {duration:.1f} seconds at {SAMPLE_RATE} Hz mono; longer files are truncated to the first {MAX_ANALYZED_SECONDS:.0f} seconds.",
-        "This external model is licensed CC-BY-NC-SA 4.0 and is intended for non-commercial research/education.",
-        "No DEEP-GUARD-specific audio benchmark has been measured yet; results may not generalize to unseen voices, languages, codecs, or cloning tools.",
+        "The model card describes an English-focused model fine-tuned on 1,866 clips; small training/evaluation data limits generalization.",
+        "DEEP-GUARD has not independently benchmarked this external model. Results may not generalize to unseen voices, languages, codecs, or cloning tools.",
     ]
-    summary = (
-        "The pretrained speech model is close to its default 0.5 decision boundary; treat this clip as inconclusive."
-        if verdict == "uncertain"
-        else (
+    if verdict == "uncertain":
+        summary = (
+            "The pretrained speech model is close to its default 0.5 decision boundary; "
+            "treat this clip as inconclusive."
+        )
+    elif verdict == "likely_ai_generated":
+        summary = (
             f"The pretrained speech model assigned {fake_probability * 100:.1f}% to its synthetic/spoof class. "
             "This is a screening signal, not proof that the voice was generated."
-            if verdict == "likely_ai_generated"
-            else f"The pretrained speech model assigned {real_probability * 100:.1f}% to its human/bona-fide class. "
+        )
+    else:
+        summary = (
+            f"The pretrained speech model assigned {real_probability * 100:.1f}% to its human/bona-fide class. "
             "This is not proof of a genuine speaker or recording."
         )
-    )
+
     return {
         "modality": "audio",
         "verdict": verdict,

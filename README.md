@@ -18,7 +18,7 @@ DEEP-Guard is a research and engineering platform for assessing the authenticity
 | Audio preprocessing / Mel-spectrogram prototype | ⏳ Feature path present; classifier not trained |
 | Multimodal evidence fusion | ⏳ Architecture planned; end-to-end evaluation pending |
 | Grad-CAM utility | ⏳ Utility exists; not enabled in current inference response |
-| CI workflow | ✅ Configured; verify latest Actions run |
+| CI workflow | ✅ Python and frontend jobs pass on the latest verified run |
 | Trained video checkpoint | ⏳ Requires dataset + training run |
 | Trained audio checkpoint | ⏳ Requires dataset + training run |
 | Cross-generator benchmark | ⏳ Requires evaluation data |
@@ -49,15 +49,15 @@ The API intentionally returns **UNCERTAIN/experimental** for video and audio unt
              REAL       AI-GENERATED     UNCERTAIN
 ```
 
-## How to complete the remaining experimental work
+## Remaining experimental work
 
 ### 1. Prepare licensed datasets
 
 Keep raw datasets outside Git. Register each dataset with its source, license, class definitions, generator/source information, and version. Create independent train/validation/test splits and prevent near-duplicate leakage.
 
-### 2. Train the image baseline
+### 2. Improve the image baseline (future work)
 
-Use the existing training pipeline and run a real experiment. Save the checkpoint and record accuracy, precision, recall, F1, ROC-AUC, confusion matrix, seed, dataset version, and configuration.
+The current five-epoch Tiny-GenImage baseline, best checkpoint, dataset manifest, and held-out evaluation are already published. Keep this baseline intact for the current demonstration. When improving it later, train with more diverse data and evaluate a new checkpoint on a separate held-out set before replacing or comparing scores.
 
 ### 3. Video and audio are experimental
 
@@ -77,25 +77,28 @@ Test JPEG compression, resizing, blur, noise, screenshots, transcoding, and at l
 
 ### 7. Final examiner demonstration
 
-Upload an image, video, and audio sample in the dashboard. Show the prediction, confidence, model version, evidence, Grad-CAM where applicable, uncertainty, and final report. Use measured results only.
+Use the current dashboard to upload and analyze an image, show the model scores and evidence, and open the model-availability panel. The current dashboard accepts images only. Video/audio detection remains experimental/untrained, multimodal fusion is not end-to-end validated, and Grad-CAM is not enabled in the current inference response. Use measured results only.
 
 ## Local run
 
-Backend:
+For the full Windows/PowerShell walkthrough and examiner script, see [Final Demonstration Guide](docs/FINAL_DEMO.md).
 
-```bash
-uvicorn backend.app.main:app --reload
+Start the backend from the repository root after downloading `artifacts/image_training_best.pt` from the [training-checkpoints release](https://github.com/ABHILATTHE6/DEEP-GUARD/releases/tag/training-checkpoints):
+
+```powershell
+$env:DEEP_GUARD_IMAGE_CHECKPOINT = (Resolve-Path ".\\artifacts\\image_training_best.pt").Path
+.\\.venv\\Scripts\\python.exe -m uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Frontend:
+In a second terminal, start the frontend:
 
-```bash
+```powershell
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Set `DEEP_GUARD_IMAGE_CHECKPOINT` to a real checkpoint produced by the training pipeline to activate image inference.
+Verify the backend at <http://127.0.0.1:8000/api/v1/health>. The React dashboard is served at the Vite URL printed by `npm run dev`, usually <http://localhost:5173>.
 
 ## Evaluation
 
@@ -127,7 +130,7 @@ For image training commands and checkpoint recovery from GitHub Releases, see [I
 
 For the deadline-focused reproducible image baseline, open the [DEEP-GUARD Colab Training notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb). It prepares a public Tiny-GenImage baseline, can restore/publish checkpoints through GitHub Releases, evaluates a held-out test split, and publishes the small report/manifest to `reports/`. Use a GPU runtime and a fine-grained GitHub token with repository Contents read/write permission if checkpoint/report publishing is required.
 
-The fallback dataset protocol is described in [docs/TRAINING.md](docs/TRAINING.md). It is **not** the previous mixed COCO + Nature + Tiny-GenImage V3 experiment; label its metrics accordingly. Final measured results will be published only after the notebook completes successfully.
+The fallback dataset protocol is described in [docs/TRAINING.md](docs/TRAINING.md). It is **not** the previous mixed COCO + Nature + Tiny-GenImage V3 experiment; label its metrics accordingly. The current baseline's measured results, manifest, and checksums are already published; a full clean-runtime reproduction remains pending.
 
 See [reports/README.md](reports/README.md) for the state of final evaluation artifacts.
 

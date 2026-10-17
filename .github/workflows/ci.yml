@@ -38,3 +38,10 @@ jobs:
         run: npm install
       - name: Build dashboard
         run: npm run build
+
+  container-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build deployment container
+        run: docker build --tag deep-guard:ci .

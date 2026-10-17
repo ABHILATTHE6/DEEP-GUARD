@@ -1,0 +1,17 @@
+.gcloudignore
+.git
+.git/**
+.venv/
+.venv/**
+**/__pycache__/**
+frontend/node_modules/**
+frontend/dist/**
+artifacts/**
+data/**
+reports/**
+docs/**
+notebooks/**
+tests/**
+*.log
+.env
+.env.*

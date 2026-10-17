@@ -93,7 +93,53 @@ jobs:
           assert result.get("modality") == "image", result
           assert result.get("status") == "ready", result
           assert {"ai_generated", "real"} <= set(result.get("scores", {})), result
-          print("Container inference smoke test passed:", result.get("verdict"), result.get("model"))
+          print("Container image inference smoke test passed:", result.get("verdict"), result.get("model"))
+          PY
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "color=c=blue:s=64x64:r=4:d=2" -an -c:v libx264 -pix_fmt yuv420p -y /tmp/deep-guard-smoke.mp4
+          curl --fail --silent --show-error \
+            --form "media=@/tmp/deep-guard-smoke.mp4;type=video/mp4" \
+            http://127.0.0.1:8080/api/v1/analyze > /tmp/deep-guard-video.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path("/tmp/deep-guard-video.json").read_text())
+          assert result.get("modality") == "video", result
+          assert result.get("status") == "experimental_frame_based", result
+          assert {"ai_generated", "real"} <= set(result.get("scores", {})), result
+          assert result.get("frames_sampled", 0) > 0, result
+          print("Container video-frame smoke test passed:", result.get("verdict"), result.get("frames_sampled"))
+          PY
+          python - <<'PY'
+          from pathlib import Path
+          from types import SimpleNamespace
+
+          import numpy as np
+          import soundfile as sf
+          import torch
+
+          from ml.media.audio import analyze_audio
+
+          class DummyAudioModel(torch.nn.Module):
+              def __init__(self):
+                  super().__init__()
+                  self.anchor = torch.nn.Parameter(torch.zeros(()))
+                  self.config = SimpleNamespace(id2label={0: "REAL", 1: "FAKE"})
+
+              def forward(self, input_values):
+                  logits = torch.tensor([[0.1, 2.0]], device=input_values.device)
+                  return SimpleNamespace(logits=logits)
+
+          sample_rate = 16000
+          time = np.arange(sample_rate * 2, dtype=np.float32) / sample_rate
+          waveform = (0.2 * np.sin(2 * np.pi * 220 * time)).astype(np.float32)
+          audio_path = Path("/tmp/deep-guard-smoke.wav")
+          sf.write(audio_path, waveform, sample_rate)
+          result = analyze_audio(audio_path, model=DummyAudioModel())
+          assert result.get("modality") == "audio", result
+          assert result.get("status") == "experimental_pretrained", result
+          assert result["scores"]["ai_generated"] > result["scores"]["real"], result
+          print("Container audio preprocessing/model-contract smoke test passed.")
           PY
           printf 'not an actual image' > /tmp/deep-guard-invalid.png
           invalid_status="$(curl --silent --output /tmp/deep-guard-invalid.json --write-out '%{http_code}' \

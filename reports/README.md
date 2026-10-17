@@ -1,12 +1,14 @@
 # Evaluation Reports
 
-This directory holds small, versioned experiment reports and dataset manifests. Raw media data and model checkpoints do not belong in ordinary Git history.
+This directory contains versioned experiment reports and dataset metadata. Raw media datasets and large model checkpoints are stored separately; they do not belong in ordinary Git history.
 
-The Colab workflow can publish:
+## Published evaluation
 
-- `image_evaluation.json` — validation-calibrated operating threshold and held-out test metrics.
-- `dataset_manifest.json` — source dataset, split sizes, label mapping, and preparation seed.
+- [Tiny-GenImage image baseline — human-readable report](image_evaluation_tiny_genimage.md)
+- [Tiny-GenImage image baseline — machine-readable JSON](image_evaluation.json)
 
-These files are intentionally not populated with placeholder performance metrics. They will appear after a real run completes and publishes its results. The quick recovery notebook uses TheKernel01/Tiny-GenImage and is a separate baseline protocol, not the earlier mixed V3 split.
+The current report describes the deadline-focused Tiny-GenImage baseline trained for five epochs using 3,000 images per class. It is not the previous mixed COCO + Nature + Tiny-GenImage V3 experiment.
 
-Report key metrics with class/probability orientation, split counts, source license/attribution, threshold calibration procedure, checkpoint SHA-256, and limitations. Never describe metrics from another dataset protocol as though they came from this run.
+## Next reproducibility step
+
+Run the public [Colab training notebook](https://colab.research.google.com/github/ABHILATTHE6/DEEP-GUARD/blob/main/notebooks/DEEP_GUARD_Colab_Training.ipynb) through its final publication cell. That cell updates the JSON report with checkpoint and dataset-manifest checksums and commits the actual dataset manifest. Do not publish placeholder performance metrics.

@@ -5,9 +5,9 @@ This guide covers the currently working local image-analysis demonstration. Keep
 ## Implemented status at demo time
 
 - **Image:** trained EfficientNet-B0 baseline, FastAPI inference endpoint, and React dashboard are connected.
-- **Video:** experimental/untrained. The current dashboard upload accepts images only; do not present video detection as operational.
-- **Audio:** experimental/untrained. Do not present audio detection as operational.
-- **Multimodal fusion:** architecture/API contract only; end-to-end evaluation is pending.
+- **Video:** experimental frame-aggregated screen. The API samples up to eight frames and averages the image classifier's scores. It does not model temporal inconsistencies, lip-sync, or audio/video alignment, and it has no dedicated video benchmark.
+- **Audio:** external pretrained English speech deepfake classifier. The first audio request downloads about 1.26 GB of model weights. DEEP-GUARD has not independently benchmarked this model; treat it as an experimental reference model rather than a validated project-trained detector.
+- **Multimodal fusion:** not implemented/validated end to end; image, video, and audio outputs are not combined into one fused decision.
 - **Pixel-level Grad-CAM:** not included in the current inference response.
 
 ## Start locally on Windows
@@ -87,5 +87,5 @@ These results describe this specific dataset and split. They do not establish pe
 - [ ] Verify the GitHub Actions run is green.
 - [ ] Capture dashboard screenshots with a representative image and an API result.
 - [ ] Include the evaluation report and dataset manifest in the project report.
-- [ ] Clearly identify video/audio and multimodal fusion as experimental/planned.
+- [ ] Clearly identify video as frame-aggregated experimental screening, audio as an external pretrained English speech detector, and multimodal fusion as not end-to-end validated.
 - [ ] Keep the current checkpoint and reported metrics separate from any future retrained model.
